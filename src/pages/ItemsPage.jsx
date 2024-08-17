@@ -1,27 +1,28 @@
 import { useState, useEffect } from "react";
 import {
-  getElementos,
-  getElementosById,
-  createElementos,
-  editElementos,
-  deleteElementos,
-} from "../apis/elementosApi";
-import { elementosFields } from "../constants/fields";
+  getItems,
+  getItemsById,
+  createItems,
+  editItems,
+  deleteItems,
+} from "../apis/itemsApi";
+import { itemsFields } from "../constants/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 
-const ElementosPage = () => {
-  const [elementos, setElementos] = useState([]);
+const ItemsPage = () => {
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [fields, setFields] = useState(elementosFields);
+  const [fields, setFields] = useState(itemsFields);
 
   async function fetchData() {
     setLoading(true);
-    const response = await getElementos();
-    setElementos(response.data);
+    const response = await getItems();
+    console.log(response);
+    setItems(response.data);
     setLoading(false);
   }
 
@@ -33,7 +34,7 @@ const ElementosPage = () => {
 
   const handleEdit = async (id) => {
     setModalMode("edit");
-    const response = await getElementosById(id);
+    const response = await getItemsById(id);
 
     const fieldsTmp = fields;
     fieldsTmp.forEach((field) => {
@@ -47,18 +48,18 @@ const ElementosPage = () => {
 
   const handleDelete = async (id) => {
     console.log("Eliminando el registro", id);
-    await deleteElementos(id);
+    await deleteItems(id);
     fetchData();
   };
 
   const handleModalSubmit = (form) => {
     const formData = {};
-    const formElements = form.elements;
+    const formItems = form.items;
 
-    for (let i = 0; i < formElements.length; i++) {
-      const element = formElements[i];
-      if (element.id) {
-        formData[element.id] = element.value;
+    for (let i = 0; i < formItems.length; i++) {
+      const item = formItems[i];
+      if (item.id) {
+        formData[item.id] = item.value;
       }
     }
 
@@ -66,8 +67,10 @@ const ElementosPage = () => {
 
     if (modalMode === "insert") {
       console.log("Petición insertar DB");
+      // createItems(formData);
     } else if (modalMode === "edit") {
       console.log("Petición actualizar DB");
+      // editItems(id, formData);
     } else {
       console.log("No existe modo");
     }
@@ -90,10 +93,12 @@ const ElementosPage = () => {
         {loading ? (
           <Loader className={"size-10"} />
         ) : (
-          elementos.length > 0 && (
+          items.length > 0 && (
             <>
               <div className="flex w-full items-center justify-between">
-                <h2 className="text-xl font-bold uppercase">Tabla Periódica</h2>
+                <h2 className="text-xl font-bold uppercase">
+                  Parametrización de Ítems
+                </h2>
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -103,8 +108,12 @@ const ElementosPage = () => {
                 </button>
               </div>
               <Table
-                dataList={elementos}
-                headers={{ _id: "ID", nombre: "Nombre", simbolo: "Símbolo" }}
+                dataList={items}
+                headers={{
+                  value1: "Valor 1",
+                  value2: "Valor 2",
+                  topic: "Tema",
+                }}
                 onHandleEdit={handleEdit}
                 onHandleDelete={handleDelete}
               />
@@ -113,16 +122,14 @@ const ElementosPage = () => {
         )}
       </div>
       <Modal
-        modalTitle={
-          modalMode === "insert" ? "Nuevo elemento" : "Editar elemento"
-        }
+        modalTitle={modalMode === "insert" ? "Nuevo ítem" : "Editar ítem"}
         isOpen={modalOpen}
         onClose={handleModalClose}
-        fields={elementosFields}
+        fields={itemsFields}
         onSubmit={handleModalSubmit}
       />
     </>
   );
 };
 
-export default ElementosPage;
+export default ItemsPage;

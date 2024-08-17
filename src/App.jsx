@@ -1,9 +1,9 @@
-import ElementosPage from "./pages/ElementosPage";
+import ItemsPage from "./pages/ItemsPage";
 
 const App = () => {
   return (
     <>
-      <ElementosPage />
+      <ItemsPage />
     </>
   );
 };

@@ -7,7 +7,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
   const handleSubmit = (ev) => {
     ev.preventDefault();
     const form = ev.target;
-    const fields = form.elements;
+    const fields = form.items;
     let isValid = true;
 
     isValid = validateForm(fields);
@@ -41,7 +41,6 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
               onClick={onClose}
             >
               <i className="fa fa-close" />
-              <span className="sr-only">Close modal</span>
             </button>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
@@ -55,6 +54,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
                         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
                       >
                         {field.label}
+                        {field.required && "*"}
                       </label>
                       <input
                         type="text"
@@ -78,6 +78,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
                         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
                       >
                         {field.label}
+                        {field.required && "*"}
                       </label>
                       <textarea
                         id={field.name}
@@ -99,6 +100,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
                         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
                       >
                         {field.label}
+                        {field.required && "*"}
                       </label>
                       <input
                         type="number"
@@ -123,6 +125,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
                         className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
                       >
                         {field.label}
+                        {field.required && "*"}
                       </label>
                       <select
                         id={field.name}

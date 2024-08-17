@@ -1,8 +1,8 @@
 const apiUrl = "https://qmkadmindb.onrender.com/api";
 
-export async function getElementos() {
+export async function getItems() {
   try {
-    const response = await fetch(`${apiUrl}/elementos`);
+    const response = await fetch(`${apiUrl}/items`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -11,9 +11,9 @@ export async function getElementos() {
   }
 }
 
-export async function getElementosById(id) {
+export async function getItemsById(id) {
   try {
-    const response = await fetch(`${apiUrl}/elementos/${id}`);
+    const response = await fetch(`${apiUrl}/items/${id}`);
     const data = await response.json();
     return data;
   } catch (error) {
@@ -22,9 +22,9 @@ export async function getElementosById(id) {
   }
 }
 
-export async function createElementos(data) {
+export async function createItems(data) {
   try {
-    const response = await fetch(`${apiUrl}/elementos`, {
+    const response = await fetch(`${apiUrl}/items`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,9 +39,9 @@ export async function createElementos(data) {
   }
 }
 
-export async function editElementos(id, data) {
+export async function editItems(id, data) {
   try {
-    const response = await fetch(`${apiUrl}/elementos/${id}`, {
+    const response = await fetch(`${apiUrl}/items/${id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -56,9 +56,9 @@ export async function editElementos(id, data) {
   }
 }
 
-export async function deleteElementos(id) {
+export async function deleteItems(id) {
   try {
-    const response = await fetch(`${apiUrl}/elementos/${id}`, {
+    const response = await fetch(`${apiUrl}/items/${id}`, {
       method: "DELETE",
     });
     return response.ok;

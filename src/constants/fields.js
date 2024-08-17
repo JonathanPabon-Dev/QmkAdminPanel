@@ -1,28 +1,23 @@
-export const elementosFields = [
+export const itemsFields = [
   {
-    name: "numeroAtomico",
-    label: "Número Atómico",
-    type: "number",
-    value: 0,
-    placeholder: "Número atómico del elemento químico",
-    required: true,
-    min: 1,
-    step: 1,
-  },
-  {
-    name: "nombre",
-    label: "Nombre",
+    name: "Valor 1",
+    label: "Valor 1",
     type: "text",
     value: "",
-    placeholder: "Nombre del elemento químico",
     required: true,
   },
   {
-    name: "simbolo",
-    label: "Símbolo",
+    name: "Valor 2",
+    label: "Valor 2",
     type: "text",
     value: "",
-    placeholder: "Símbolo del elemento químico",
+    required: true,
+  },
+  {
+    name: "Tema",
+    label: "Tema",
+    type: "text",
+    value: "",
     required: true,
   },
 ];
