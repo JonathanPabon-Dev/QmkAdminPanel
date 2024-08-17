@@ -42,7 +42,7 @@ export async function createItems(data) {
 export async function editItems(id, data) {
   try {
     const response = await fetch(`${apiUrl}/items/${id}`, {
-      method: "PATCH",
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
