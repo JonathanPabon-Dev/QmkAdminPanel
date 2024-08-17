@@ -17,73 +17,74 @@ const ItemsPage = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
   const [fields, setFields] = useState(itemsFields);
+  const [itemId, setItemId] = useState(null);
 
-  async function fetchData() {
-    setLoading(true);
-    const response = await getItems();
-    console.log(response);
-    setItems(response.data);
+  function resetStates() {
+    setItems([]);
     setLoading(false);
+    setModalOpen(false);
+    setModalMode("");
+    setFields(itemsFields);
+    setItemId(null);
   }
 
-  const handleNew = async () => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await getItems();
+      setItems(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleNew = () => {
     setModalMode("insert");
-    console.log("Nuevo registro");
     setModalOpen(true);
   };
 
   const handleEdit = async (id) => {
     setModalMode("edit");
-    const response = await getItemsById(id);
+    setModalOpen(true);
+    setItemId(id);
 
-    const fieldsTmp = fields;
+    const response = await getItemsById(id);
+    const fieldsTmp = [...fields];
     fieldsTmp.forEach((field) => {
       field.value = response.data[field.name];
     });
     setFields(fieldsTmp);
-
-    console.log("Editando el registro", id);
-    setModalOpen(true);
   };
 
   const handleDelete = async (id) => {
-    console.log("Eliminando el registro", id);
     await deleteItems(id);
-    fetchData();
+    await fetchData();
   };
 
-  const handleModalSubmit = (form) => {
-    const formData = {};
-    const formItems = form.items;
-
-    for (let i = 0; i < formItems.length; i++) {
-      const item = formItems[i];
-      if (item.id) {
-        formData[item.id] = item.value;
-      }
+  const handleModalSubmit = async (form) => {
+    switch (modalMode) {
+      case "insert":
+        await createItems(form);
+        break;
+      case "edit":
+        await editItems(itemId, form);
+        break;
+      default:
+        console.log("No existe modo");
     }
 
-    console.log("Form data:", formData);
-
-    if (modalMode === "insert") {
-      console.log("Petición insertar DB");
-      // createItems(formData);
-    } else if (modalMode === "edit") {
-      console.log("Petición actualizar DB");
-      // editItems(id, formData);
-    } else {
-      console.log("No existe modo");
-    }
-
-    fetchData();
+    resetStates();
+    await fetchData();
   };
 
-  const handleModalClose = () => {
-    setModalOpen(false);
-    setModalMode("");
+  const handleModalClose = async () => {
+    resetStates();
+    await fetchData();
   };
 
   useEffect(() => {
+    resetStates();
     fetchData();
   }, []);
 
@@ -125,7 +126,7 @@ const ItemsPage = () => {
         modalTitle={modalMode === "insert" ? "Nuevo ítem" : "Editar ítem"}
         isOpen={modalOpen}
         onClose={handleModalClose}
-        fields={itemsFields}
+        fields={fields}
         onSubmit={handleModalSubmit}
       />
     </>

@@ -1,26 +1,42 @@
 import PropTypes from "prop-types";
-import { validateForm } from "../utils/validateForm";
+import { useState, useEffect } from "react";
 
 const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
-  if (!isOpen) return null;
+  const [formValues, setFormValues] = useState({});
+
+  useEffect(() => {
+    if (fields) {
+      const initialValues = {};
+      fields.forEach((field) => {
+        initialValues[field.name] = field.value;
+      });
+      setFormValues(initialValues);
+    }
+  }, [fields]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      clearForm();
+    }
+  }, [isOpen]);
+
+  function clearForm() {
+    setFormValues({});
+  }
 
   const handleSubmit = (ev) => {
     ev.preventDefault();
-    const form = ev.target;
-    const fields = form.items;
-    let isValid = true;
-
-    isValid = validateForm(fields);
-
-    // Si el formulario es válido, enviarlo
-    if (!isValid) {
-      document.getElementById("error-message").textContent =
-        "*Campos requeridos o valores incorrectos.";
-    } else {
-      onSubmit(form);
-    }
+    onSubmit(formValues);
+    clearForm();
   };
 
+  const handleInputChange = (ev) => {
+    console.log(formValues);
+    const { name, value } = ev.target;
+    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
+  };
+
+  if (!isOpen) return null;
   return (
     <div
       tabIndex="-1"
@@ -37,7 +53,7 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
             </h3>
             <button
               type="button"
-              className="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+              className="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm font-bold text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
               onClick={onClose}
             >
               <i className="fa fa-close" />
@@ -45,112 +61,31 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
             {fields.map((field, index) => {
-              switch (field.type) {
-                case "text":
-                  return (
-                    <div key={index}>
-                      <label
-                        htmlFor={field.name}
-                        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {field.label}
-                        {field.required && "*"}
-                      </label>
-                      <input
-                        type="text"
-                        name={field.name}
-                        id={field.name}
-                        value={field.value}
-                        onChange={(ev) => {
-                          console.log("Text changed.", ev.target.value);
-                        }}
-                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                        placeholder={field.placeholder}
-                        required={field.required}
-                      />
-                    </div>
-                  );
-                case "textarea":
-                  return (
-                    <div key={index}>
-                      <label
-                        htmlFor={field.name}
-                        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {field.label}
-                        {field.required && "*"}
-                      </label>
-                      <textarea
-                        id={field.name}
-                        value={field.value}
-                        onChange={(ev) => {
-                          console.log("Text changed.", ev.target.value);
-                        }}
-                        className="focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                        placeholder={field.placeholder}
-                        required={field.required}
-                      />
-                    </div>
-                  );
-                case "number":
-                  return (
-                    <div key={index}>
-                      <label
-                        htmlFor={field.name}
-                        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {field.label}
-                        {field.required && "*"}
-                      </label>
-                      <input
-                        type="number"
-                        name={field.name}
-                        id={field.name}
-                        value={field.value}
-                        onChange={(ev) => {
-                          console.log("Number changed.", ev.target.value);
-                        }}
-                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                        placeholder={field.placeholder}
-                        required={field.required}
-                        step={field.step}
-                      />
-                    </div>
-                  );
-                case "dropdown":
-                  return (
-                    <div key={index}>
-                      <label
-                        htmlFor={field.name}
-                        className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-                      >
-                        {field.label}
-                        {field.required && "*"}
-                      </label>
-                      <select
-                        id={field.name}
-                        value={field.value}
-                        onChange={(ev) => {
-                          console.log("Option changed.", ev.target.value);
-                        }}
-                        className="focus:ring-primary-500 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                      >
-                        {field.options.map((option, index) => (
-                          <option key={index} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                default:
-                  return null;
-              }
+              return (
+                <div key={index}>
+                  <label
+                    htmlFor={field.name}
+                    className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
+                  >
+                    {field.label}
+                    {field.required && "*"}
+                  </label>
+                  <input
+                    type="text"
+                    name={field.name}
+                    id={field.name}
+                    value={formValues[field.name] || ""}
+                    onChange={handleInputChange}
+                    className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                    required={field.required}
+                  />
+                </div>
+              );
             })}
             <div id="error-message" className="text-red-500"></div>
             <button
               type="submit"
-              className="bg-primary-700 hover:bg-primary-800 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800 inline-flex items-center rounded-lg px-5 py-2.5 text-center text-sm font-medium text-white focus:outline-none focus:ring-4"
+              className="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm font-bold text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
             >
               Enviar
             </button>
@@ -169,16 +104,8 @@ Modal.propTypes = {
     PropTypes.shape({
       name: PropTypes.string,
       label: PropTypes.string,
-      type: PropTypes.string,
       value: PropTypes.any,
-      placeholder: PropTypes.string,
       required: PropTypes.bool,
-      options: PropTypes.arrayOf(
-        PropTypes.shape({
-          value: PropTypes.any,
-          label: PropTypes.string,
-        }),
-      ),
     }),
   ),
   onSubmit: PropTypes.func,

@@ -1,22 +1,19 @@
 export const itemsFields = [
   {
-    name: "Valor 1",
+    name: "value1",
     label: "Valor 1",
-    type: "text",
     value: "",
     required: true,
   },
   {
-    name: "Valor 2",
+    name: "value2",
     label: "Valor 2",
-    type: "text",
     value: "",
     required: true,
   },
   {
-    name: "Tema",
+    name: "topic",
     label: "Tema",
-    type: "text",
     value: "",
     required: true,
   },
