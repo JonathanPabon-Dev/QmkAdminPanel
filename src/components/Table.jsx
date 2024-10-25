@@ -31,14 +31,14 @@ const Table = ({ headers, dataList, onHandleEdit, onHandleDelete }) => {
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
-                  onClick={() => onHandleEdit(data._id)}
+                  onClick={() => onHandleEdit(data.id)}
                 >
                   <i className="fa fa-edit" />
                 </button>
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
-                  onClick={() => onHandleDelete(data._id)}
+                  onClick={() => onHandleDelete(data.id)}
                 >
                   <i className="fa fa-trash" />
                 </button>

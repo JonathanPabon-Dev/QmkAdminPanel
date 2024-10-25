@@ -1,15 +1,10 @@
 import { useState, useEffect } from "react";
-import {
-  getItems,
-  getItemsById,
-  createItems,
-  editItems,
-  deleteItems,
-} from "../apis/itemsApi";
+import Items from "../supabase/tables/items";
 import { itemsFields } from "../constants/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
+import Swal from "sweetalert2";
 
 const ItemsPage = () => {
   const [items, setItems] = useState([]);
@@ -31,7 +26,7 @@ const ItemsPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await getItems();
+      const response = await Items.getItems();
       setItems(response.data);
       setLoading(false);
     } catch (error) {
@@ -49,26 +44,41 @@ const ItemsPage = () => {
     setModalOpen(true);
     setItemId(id);
 
-    const response = await getItemsById(id);
+    const response = await Items.getItemsById(id);
+    const item = response.data[0];
+
     const fieldsTmp = [...fields];
     fieldsTmp.forEach((field) => {
-      field.value = response.data[field.name];
+      field.value = item[field.name];
     });
     setFields(fieldsTmp);
   };
 
   const handleDelete = async (id) => {
-    await deleteItems(id);
-    await fetchData();
+    Swal.fire({
+      text: "¿Está seguro de que desea eliminar el registro?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#009c0d",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        await Items.deleteItem(id);
+        await fetchData();
+      }
+    });
   };
 
   const handleModalSubmit = async (form) => {
+    console.log(form);
     switch (modalMode) {
       case "insert":
-        await createItems(form);
+        await Items.createItems(form);
         break;
       case "edit":
-        await editItems(itemId, form);
+        await Items.updateItems(form, itemId);
         break;
       default:
         console.log("No existe modo");

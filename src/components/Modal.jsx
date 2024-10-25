@@ -31,7 +31,6 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
   };
 
   const handleInputChange = (ev) => {
-    console.log(formValues);
     const { name, value } = ev.target;
     setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
