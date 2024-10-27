@@ -1,33 +1,33 @@
 import { useState, useEffect } from "react";
-import Items from "../supabase/tables/items";
-import { itemsFields } from "../constants/fields";
+import Parameters from "../supabase/tables/parameters";
+import { parametersFields } from "../constants/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
 
-const ItemsPage = () => {
-  const [items, setItems] = useState([]);
+const ParametersPage = () => {
+  const [parameters, setParameters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [fields, setFields] = useState(itemsFields);
-  const [itemId, setItemId] = useState(null);
+  const [fields, setFields] = useState(parametersFields);
+  const [parameterId, setParameterId] = useState(null);
 
   function resetStates() {
-    setItems([]);
+    setParameters([]);
     setLoading(false);
     setModalOpen(false);
     setModalMode("");
-    setFields(itemsFields);
-    setItemId(null);
+    setFields(parametersFields);
+    setParameterId(null);
   }
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await Items.getItems();
-      setItems(response.data);
+      const response = await Parameters.getParameters();
+      setParameters(response.data);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -42,14 +42,14 @@ const ItemsPage = () => {
   const handleEdit = async (id) => {
     setModalMode("edit");
     setModalOpen(true);
-    setItemId(id);
+    setParameterId(id);
 
-    const response = await Items.getItemsById(id);
-    const item = response.data[0];
+    const response = await Parameters.getParametersById(id);
+    const parameter = response.data[0];
 
     const fieldsTmp = [...fields];
     fieldsTmp.forEach((field) => {
-      field.value = item[field.name];
+      field.value = parameter[field.name];
     });
     setFields(fieldsTmp);
   };
@@ -65,7 +65,7 @@ const ItemsPage = () => {
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await Items.deleteItem(id);
+        await Parameters.deleteParameter(id);
         await fetchData();
       }
     });
@@ -75,10 +75,10 @@ const ItemsPage = () => {
     console.log(form);
     switch (modalMode) {
       case "insert":
-        await Items.createItems(form);
+        await Parameters.createParameters(form);
         break;
       case "edit":
-        await Items.updateItems(form, itemId);
+        await Parameters.updateParameters(form, parameterId);
         break;
       default:
         console.log("No existe modo");
@@ -100,14 +100,14 @@ const ItemsPage = () => {
 
   return (
     <>
-      <div className="container mx-auto my-16 flex w-fit flex-col items-center justify-center gap-2">
+      <div className="parameters-center container mx-auto my-16 flex w-fit flex-col justify-center gap-2">
         {loading ? (
           <Loader className={"size-10"} />
         ) : (
-          items.length > 0 && (
+          parameters.length > 0 && (
             <>
-              <div className="flex w-full items-center justify-between">
-                <h2 className="text-xl font-bold uppercase">Ítems</h2>
+              <div className="parameters-center flex w-full justify-between">
+                <h2 className="text-xl font-bold uppercase">Parámetros</h2>
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -117,11 +117,10 @@ const ItemsPage = () => {
                 </button>
               </div>
               <Table
-                dataList={items}
+                dataList={parameters}
                 headers={{
-                  value1: "Valor 1",
-                  value2: "Valor 2",
-                  topic: "Tema",
+                  name: "Parámetro",
+                  value: "Valor",
                 }}
                 onHandleEdit={handleEdit}
                 onHandleDelete={handleDelete}
@@ -131,7 +130,9 @@ const ItemsPage = () => {
         )}
       </div>
       <Modal
-        modalTitle={modalMode === "insert" ? "Nuevo ítem" : "Editar ítem"}
+        modalTitle={
+          modalMode === "insert" ? "Nuevo parámetro" : "Editar parámetro"
+        }
         isOpen={modalOpen}
         onClose={handleModalClose}
         fields={fields}
@@ -141,4 +142,4 @@ const ItemsPage = () => {
   );
 };
 
-export default ItemsPage;
+export default ParametersPage;

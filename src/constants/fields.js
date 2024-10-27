@@ -18,3 +18,18 @@ export const itemsFields = [
     required: true,
   },
 ];
+
+export const parametersFields = [
+  {
+    name: "name",
+    label: "Parámetro",
+    value: "",
+    required: true,
+  },
+  {
+    name: "value",
+    label: "Valor",
+    value: "",
+    required: true,
+  },
+];
