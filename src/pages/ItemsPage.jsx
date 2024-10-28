@@ -100,7 +100,7 @@ const ItemsPage = () => {
 
   return (
     <>
-      <div className="container mx-auto my-16 flex w-fit flex-col items-center justify-center gap-2">
+      <div className="container mx-auto my-16 flex w-fit max-w-[90%] flex-col items-center justify-center gap-2">
         {loading ? (
           <Loader className={"size-10"} />
         ) : (
@@ -116,16 +116,18 @@ const ItemsPage = () => {
                   <i className="fa fa-plus" />
                 </button>
               </div>
-              <Table
-                dataList={items}
-                headers={{
-                  value1: "Valor 1",
-                  value2: "Valor 2",
-                  topic: "Tema",
-                }}
-                onHandleEdit={handleEdit}
-                onHandleDelete={handleDelete}
-              />
+              <div className="w-full overflow-x-auto">
+                <Table
+                  dataList={items}
+                  headers={{
+                    value1: "Valor 1",
+                    value2: "Valor 2",
+                    topic: "Tema",
+                  }}
+                  onHandleEdit={handleEdit}
+                  onHandleDelete={handleDelete}
+                />
+              </div>
             </>
           )
         )}

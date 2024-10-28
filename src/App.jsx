@@ -17,9 +17,16 @@ const App = () => {
 
   return (
     <>
-      <div>
-        <label htmlFor="tableSelect">Tabla:</label>
-        <select id="tableSelect" value={selectedTable} onChange={handleChange}>
+      <div className="mx-auto my-16 flex w-80 flex-col items-center justify-center gap-2">
+        <label htmlFor="tableSelect" className="w-full text-xl font-semibold">
+          Tabla
+        </label>
+        <select
+          id="tableSelect"
+          className="w-full rounded-md border-2 border-slate-500 p-2"
+          value={selectedTable}
+          onChange={handleChange}
+        >
           <option value="">Selecciona una opción</option>
           {tables.map((table, index) => (
             <option key={index} value={table.name}>
@@ -27,9 +34,9 @@ const App = () => {
             </option>
           ))}
         </select>
-
-        {component}
       </div>
+
+      {component}
       <ToastContainer theme="dark" />
     </>
   );

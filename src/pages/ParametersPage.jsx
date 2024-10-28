@@ -100,13 +100,13 @@ const ParametersPage = () => {
 
   return (
     <>
-      <div className="parameters-center container mx-auto my-16 flex w-fit flex-col justify-center gap-2">
+      <div className="container mx-auto my-16 flex w-fit max-w-[90%] flex-col items-center justify-center gap-2">
         {loading ? (
           <Loader className={"size-10"} />
         ) : (
           parameters.length > 0 && (
             <>
-              <div className="parameters-center flex w-full justify-between">
+              <div className="flex w-full items-center justify-between">
                 <h2 className="text-xl font-bold uppercase">Parámetros</h2>
                 <button
                   type="button"
@@ -116,15 +116,17 @@ const ParametersPage = () => {
                   <i className="fa fa-plus" />
                 </button>
               </div>
-              <Table
-                dataList={parameters}
-                headers={{
-                  name: "Parámetro",
-                  value: "Valor",
-                }}
-                onHandleEdit={handleEdit}
-                onHandleDelete={handleDelete}
-              />
+              <div className="w-full overflow-x-auto">
+                <Table
+                  dataList={parameters}
+                  headers={{
+                    name: "Parámetro",
+                    value: "Valor",
+                  }}
+                  onHandleEdit={handleEdit}
+                  onHandleDelete={handleDelete}
+                />
+              </div>
             </>
           )
         )}
