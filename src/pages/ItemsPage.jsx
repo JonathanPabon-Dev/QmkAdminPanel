@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Items from "../supabase/tables/items";
-import { itemsFields } from "../constants/fields";
+import { itemsFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";

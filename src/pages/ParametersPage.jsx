@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Parameters from "../supabase/tables/parameters";
-import { parametersFields } from "../constants/fields";
+import { parametersFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";

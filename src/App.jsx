@@ -1,6 +1,6 @@
 import { createElement, useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
-import { tables } from "./constants/tables";
+import { tables } from "./models/tables";
 
 const App = () => {
   const [selectedTable, setSelectedTable] = useState("");
