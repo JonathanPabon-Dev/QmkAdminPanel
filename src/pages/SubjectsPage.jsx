@@ -65,7 +65,7 @@ const SubjectsPage = () => {
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await Subjects.deleteParameter(id);
+        await Subjects.deleteSubjects(id);
         await fetchData();
       }
     });
