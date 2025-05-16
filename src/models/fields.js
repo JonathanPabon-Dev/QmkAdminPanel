@@ -33,3 +33,18 @@ export const parametersFields = [
     required: true,
   },
 ];
+
+export const subjectsFields = [
+  {
+    name: "id",
+    label: "Código",
+    value: "",
+    required: true,
+  },
+  {
+    name: "name",
+    label: "Nombre",
+    value: "",
+    required: true,
+  },
+];
