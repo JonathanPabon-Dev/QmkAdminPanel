@@ -48,3 +48,54 @@ export const subjectsFields = [
     required: true,
   },
 ];
+
+export const studentsFields = [
+  {
+    name: "id",
+    label: "Código",
+    value: "",
+    required: true,
+  },
+  {
+    name: "number_list",
+    label: "No. Lista",
+    value: "",
+    required: true,
+  },
+  {
+    name: "first_name",
+    label: "Primer Nombre",
+    value: "",
+    required: true,
+  },
+  {
+    name: "second_name",
+    label: "Segundo Nombre",
+    value: "",
+    required: false,
+  },
+  {
+    name: "first_lastname",
+    label: "Primer Apellido",
+    value: "",
+    required: true,
+  },
+  {
+    name: "second_lastname",
+    label: "Segundo Apellido",
+    value: "",
+    required: false,
+  },
+  {
+    name: "grade_level",
+    label: "Grado",
+    value: "",
+    required: true,
+  },
+  {
+    name: "course",
+    label: "Curso/Salón",
+    value: "",
+    required: true,
+  },
+];

@@ -72,7 +72,6 @@ const ItemsPage = () => {
   };
 
   const handleModalSubmit = async (form) => {
-    console.log(form);
     switch (modalMode) {
       case "insert":
         await Items.createItems(form);
@@ -80,8 +79,6 @@ const ItemsPage = () => {
       case "edit":
         await Items.updateItems(form, itemId);
         break;
-      default:
-        console.log("No existe modo");
     }
 
     resetStates();

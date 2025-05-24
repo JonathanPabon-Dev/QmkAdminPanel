@@ -72,7 +72,6 @@ const ParametersPage = () => {
   };
 
   const handleModalSubmit = async (form) => {
-    console.log(form);
     switch (modalMode) {
       case "insert":
         await Parameters.createParameters(form);
@@ -80,8 +79,6 @@ const ParametersPage = () => {
       case "edit":
         await Parameters.updateParameters(form, parameterId);
         break;
-      default:
-        console.log("No existe modo");
     }
 
     resetStates();
