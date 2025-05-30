@@ -1,40 +1,37 @@
 import { supabase, validateConnection } from "../client";
 import { toast } from "react-toastify";
 
-const Students = {
-  getStudents: async () => {
+const Quizzes = {
+  getQuizzes: async () => {
     try {
       if (!validateConnection) {
         throw new Error("Error de conexión.");
       }
-      const response = await supabase.from("v_students").select();
+      const response = await supabase.from("quizzes").select();
       return response;
     } catch (error) {
       console.error(error);
     }
   },
 
-  getStudentsById: async (studentId) => {
+  getQuizById: async (quizId) => {
     try {
       if (!validateConnection) {
         throw new Error("Error de conexión.");
       }
-      const response = await supabase
-        .from("students")
-        .select()
-        .eq("id", studentId);
+      const response = await supabase.from("quizzes").select().eq("id", quizId);
       return response;
     } catch (error) {
       console.error(error);
     }
   },
 
-  createStudents: async (student) => {
+  createQuizzes: async (quiz) => {
     try {
       if (!validateConnection) {
         throw new Error("Error de conexión.");
       }
-      const response = await supabase.from("students").insert({ ...student });
+      const response = await supabase.from("quizzes").insert({ ...quiz });
       if (response.status === 201) {
         toast.success("Registro creado correctamente");
       } else {
@@ -46,15 +43,15 @@ const Students = {
     }
   },
 
-  updateStudents: async (student, studentId) => {
+  updateQuizzes: async (quiz, quizId) => {
     try {
       if (!validateConnection) {
         throw new Error("Error de conexión.");
       }
       const response = await supabase
-        .from("students")
-        .update({ ...student })
-        .eq("id", studentId);
+        .from("quizzes")
+        .update({ ...quiz })
+        .eq("id", quizId);
       if (response.status === 204) {
         toast.success("Registro actualizado correctamente");
       } else {
@@ -66,15 +63,12 @@ const Students = {
     }
   },
 
-  deleteStudents: async (studentId) => {
+  deleteQuizzes: async (quizId) => {
     try {
       if (!validateConnection) {
         throw new Error("Error de conexión.");
       }
-      const response = await supabase
-        .from("students")
-        .delete()
-        .eq("id", studentId);
+      const response = await supabase.from("quizzes").delete().eq("id", quizId);
       if (response.status === 204) {
         toast.success("Registro eliminado correctamente");
       } else {
@@ -87,4 +81,4 @@ const Students = {
   },
 };
 
-export default Students;
+export default Quizzes;

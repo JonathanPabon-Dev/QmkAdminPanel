@@ -1,36 +1,36 @@
 import { useState, useEffect } from "react";
-import Students from "../supabase/tables/students";
-import { studentsFields } from "../models/fields";
+import Quizzes from "../supabase/tables/quizzes";
+import { quizzesFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
 
-const StudentsPage = () => {
-  const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
+const QuizzesPage = () => {
+  const [quizzes, setQuizzes] = useState([]);
+  const [filteredQuizzes, setFilteredQuizzes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [fields, setFields] = useState(studentsFields);
-  const [studentId, setStudentId] = useState(null);
+  const [fields, setFields] = useState(quizzesFields);
+  const [quizId, setQuizId] = useState(null);
   const [filterValue, setFilterValue] = useState("");
 
   function resetStates() {
-    setStudents([]);
+    setQuizzes([]);
     setLoading(false);
     setModalOpen(false);
     setModalMode("");
-    setFields(studentsFields);
-    setStudentId(null);
+    setFields(quizzesFields);
+    setQuizId(null);
     setFilterValue("");
   }
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await Students.getStudents();
-      setStudents(response.data);
+      const response = await Quizzes.getQuizzes();
+      setQuizzes(response.data);
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -45,14 +45,14 @@ const StudentsPage = () => {
   const handleEdit = async (id) => {
     setModalMode("edit");
     setModalOpen(true);
-    setStudentId(id);
+    setQuizId(id);
 
-    const response = await Students.getStudentsById(id);
-    const student = response.data[0];
+    const response = await Quizzes.getQuizById(id);
+    const quiz = response.data[0];
 
     const fieldsTmp = [...fields];
     fieldsTmp.forEach((field) => {
-      field.value = student[field.name];
+      field.value = quiz[field.name];
     });
     setFields(fieldsTmp);
   };
@@ -68,7 +68,7 @@ const StudentsPage = () => {
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await Students.deleteStudents(id);
+        await Quizzes.deleteQuizzes(id);
         await fetchData();
       }
     });
@@ -77,10 +77,10 @@ const StudentsPage = () => {
   const handleModalSubmit = async (form) => {
     switch (modalMode) {
       case "insert":
-        await Students.createStudents(form);
+        await Quizzes.createQuizzes(form);
         break;
       case "edit":
-        await Students.updateStudents(form, studentId);
+        await Quizzes.updateQuizzes(form, quizId);
         break;
     }
 
@@ -101,21 +101,20 @@ const StudentsPage = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!filterValue.trim()) {
-        setFilteredStudents(students);
+        setFilteredQuizzes(quizzes);
         return;
       }
-      const filtered = students.filter((student) => {
-        const filter = filterValue.toLowerCase();
+      const inputValue = filterValue.toLowerCase();
+      const filtered = quizzes.filter((quiz) => {
         return (
-          student.code.toString().includes(filter) ||
-          (student.name && student.name.toLowerCase().includes(filter)) ||
-          (student.grade && student.grade.includes(filter))
+          (quiz.quiz_id && quiz.quiz_id.toLowerCase().includes(inputValue)) ||
+          (quiz.grade_level && quiz.grade.includes(inputValue))
         );
       });
-      setFilteredStudents(filtered);
+      setFilteredQuizzes(filtered);
     }, 300);
     return () => clearTimeout(timer);
-  }, [filterValue, students]);
+  }, [filterValue, quizzes]);
 
   return (
     <>
@@ -123,9 +122,9 @@ const StudentsPage = () => {
         <div className="mb-10 flex w-full">
           <input
             type="search"
-            name="studentSearch"
-            id="studentFilter"
-            placeholder="Buscar estudiante ..."
+            name="quizSearch"
+            id="quizFilter"
+            placeholder="Buscar prueba/quiz ..."
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
             className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800"
@@ -136,7 +135,7 @@ const StudentsPage = () => {
         ) : (
           <>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase">Estudiantes</h2>
+              <h2 className="text-xl font-bold uppercase">Prueba/Quiz</h2>
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -146,14 +145,17 @@ const StudentsPage = () => {
               </button>
             </div>
 
-            {filteredStudents.length > 0 ? (
+            {filteredQuizzes.length > 0 ? (
               <div className="w-full overflow-x-auto">
                 <Table
-                  dataList={filteredStudents}
+                  dataList={filteredQuizzes}
                   headers={{
-                    code: "Código",
-                    name: "Nombre",
-                    grade: "Grado",
+                    id: "ID",
+                    topic: "Tema",
+                    grade_level: "Grado",
+                    subject_id: "Asignatura",
+                    available_since: "Fecha Desde",
+                    available_until: "Fecha Hasta",
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
@@ -178,4 +180,4 @@ const StudentsPage = () => {
   );
 };
 
-export default StudentsPage;
+export default QuizzesPage;

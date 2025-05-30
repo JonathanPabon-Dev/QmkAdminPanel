@@ -23,7 +23,7 @@ const App = () => {
         </label>
         <select
           id="tableSelect"
-          className="w-full rounded-md border-2 border-slate-500 p-2"
+          className="w-full rounded-md border-2 border-slate-500 p-2 dark:bg-slate-800"
           value={selectedTable}
           onChange={handleChange}
         >

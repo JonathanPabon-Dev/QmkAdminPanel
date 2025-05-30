@@ -1,36 +1,58 @@
 import { useState, useEffect } from "react";
-import Students from "../supabase/tables/students";
-import { studentsFields } from "../models/fields";
+import Questions from "../supabase/tables/questions";
+import { questionsFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
+import Quizzes from "../supabase/tables/quizzes";
 
-const StudentsPage = () => {
-  const [students, setStudents] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
+const QuestionsPage = () => {
+  const correctOptionsList = [
+    { value: "1", text: "1" },
+    { value: "2", text: "2" },
+    { value: "3", text: "3" },
+    { value: "4", text: "4" },
+  ];
+  const [questions, setQuestions] = useState([]);
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
+  const [optionsList, setOptionsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
-  const [fields, setFields] = useState(studentsFields);
-  const [studentId, setStudentId] = useState(null);
+  const [fields, setFields] = useState(questionsFields);
+  const [questionId, setQuestionId] = useState(null);
   const [filterValue, setFilterValue] = useState("");
 
   function resetStates() {
-    setStudents([]);
+    setQuestions([]);
     setLoading(false);
     setModalOpen(false);
     setModalMode("");
-    setFields(studentsFields);
-    setStudentId(null);
+    setFields(questionsFields);
+    setQuestionId(null);
     setFilterValue("");
   }
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await Students.getStudents();
-      setStudents(response.data);
+      const response = await Questions.getQuestions();
+      setQuestions(response.data);
+
+      const quizzes = await Quizzes.getQuizzes();
+      const quizzesData = quizzes.data;
+      const quizzesList = quizzesData.map((quiz) => {
+        return {
+          value: quiz.id,
+          text: quiz.id + " | " + quiz.topic,
+        };
+      });
+      setOptionsList([
+        { name: "quiz_id", options: quizzesList },
+        { name: "correct_option", options: correctOptionsList },
+      ]);
+
       setLoading(false);
     } catch (error) {
       console.error(error);
@@ -45,14 +67,14 @@ const StudentsPage = () => {
   const handleEdit = async (id) => {
     setModalMode("edit");
     setModalOpen(true);
-    setStudentId(id);
+    setQuestionId(id);
 
-    const response = await Students.getStudentsById(id);
-    const student = response.data[0];
+    const response = await Questions.getQuestionById(id);
+    const question = response.data[0];
 
     const fieldsTmp = [...fields];
     fieldsTmp.forEach((field) => {
-      field.value = student[field.name];
+      field.value = question[field.name];
     });
     setFields(fieldsTmp);
   };
@@ -68,19 +90,22 @@ const StudentsPage = () => {
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await Students.deleteStudents(id);
+        await Questions.deleteQuestions(id);
         await fetchData();
       }
     });
   };
 
   const handleModalSubmit = async (form) => {
+    const tempId = form.id;
     switch (modalMode) {
       case "insert":
-        await Students.createStudents(form);
+        form.id = "P-" + form.quiz_id.split("-")[1] + "-" + tempId;
+        console.log(form.id);
+        await Questions.createQuestions(form);
         break;
       case "edit":
-        await Students.updateStudents(form, studentId);
+        await Questions.updateQuestions(form, questionId);
         break;
     }
 
@@ -101,21 +126,23 @@ const StudentsPage = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!filterValue.trim()) {
-        setFilteredStudents(students);
+        setFilteredQuestions(questions);
         return;
       }
-      const filtered = students.filter((student) => {
-        const filter = filterValue.toLowerCase();
+      const inputValue = filterValue.toLowerCase();
+      const filtered = questions.filter((question) => {
         return (
-          student.code.toString().includes(filter) ||
-          (student.name && student.name.toLowerCase().includes(filter)) ||
-          (student.grade && student.grade.includes(filter))
+          (question.id && question.id.toLowerCase().includes(inputValue)) ||
+          (question.question_text &&
+            question.question_text.toLowerCase().includes(inputValue)) ||
+          (question.quiz_id &&
+            question.quiz_id.toLowerCase().includes(inputValue))
         );
       });
-      setFilteredStudents(filtered);
+      setFilteredQuestions(filtered);
     }, 300);
     return () => clearTimeout(timer);
-  }, [filterValue, students]);
+  }, [filterValue, questions]);
 
   return (
     <>
@@ -123,9 +150,9 @@ const StudentsPage = () => {
         <div className="mb-10 flex w-full">
           <input
             type="search"
-            name="studentSearch"
-            id="studentFilter"
-            placeholder="Buscar estudiante ..."
+            name="questionSearch"
+            id="questionFilter"
+            placeholder="Buscar pregunta ..."
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
             className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800"
@@ -136,7 +163,7 @@ const StudentsPage = () => {
         ) : (
           <>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase">Estudiantes</h2>
+              <h2 className="text-xl font-bold uppercase">Preguntas</h2>
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -146,14 +173,19 @@ const StudentsPage = () => {
               </button>
             </div>
 
-            {filteredStudents.length > 0 ? (
+            {filteredQuestions.length > 0 ? (
               <div className="w-full overflow-x-auto">
                 <Table
-                  dataList={filteredStudents}
+                  dataList={filteredQuestions}
                   headers={{
-                    code: "Código",
-                    name: "Nombre",
-                    grade: "Grado",
+                    id: "ID",
+                    question_text: "Pregunta",
+                    option_1_text: "Opción 1",
+                    option_2_text: "Opción 2",
+                    option_3_text: "Opción 3",
+                    option_4_text: "Opción 4",
+                    correct_option: "Opción Correcta",
+                    quiz_id: "Quiz",
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
@@ -167,15 +199,16 @@ const StudentsPage = () => {
       </div>
       <Modal
         modalTitle={
-          modalMode === "insert" ? "Nuevo estudiante" : "Editar estudiante"
+          modalMode === "insert" ? "Nueva pregunta" : "Editar pregunta"
         }
         isOpen={modalOpen}
         onClose={handleModalClose}
         fields={fields}
         onSubmit={handleModalSubmit}
+        optionsList={optionsList}
       />
     </>
   );
 };
 
-export default StudentsPage;
+export default QuestionsPage;

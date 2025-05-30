@@ -1,7 +1,14 @@
 import PropTypes from "prop-types";
 import { useState, useEffect } from "react";
 
-const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
+const Modal = ({
+  modalTitle,
+  isOpen,
+  onClose,
+  fields,
+  onSubmit,
+  optionsList = [],
+}) => {
   const [formValues, setFormValues] = useState({});
 
   useEffect(() => {
@@ -31,6 +38,11 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
   };
 
   const handleInputChange = (ev) => {
+    const { name, value } = ev.target;
+    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
+  };
+
+  const handleSelectChange = (ev) => {
     const { name, value } = ev.target;
     setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
@@ -69,15 +81,39 @@ const Modal = ({ modalTitle, isOpen, onClose, fields, onSubmit }) => {
                     {field.label}
                     {field.required && "*"}
                   </label>
-                  <input
-                    type="text"
-                    name={field.name}
-                    id={field.name}
-                    value={formValues[field.name] || ""}
-                    onChange={handleInputChange}
-                    className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                    required={field.required}
-                  />
+                  {field.list ? (
+                    <>
+                      <select
+                        name={field.name}
+                        id={field.name}
+                        value={formValues[field.name] || ""}
+                        onChange={handleSelectChange}
+                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                        required={field.required}
+                      >
+                        <option value="">Selecciona una opción</option>
+                        {optionsList
+                          .find((opc) => opc.name === field.name)
+                          ?.options.map((opc, index) => (
+                            <option key={index} value={opc.value}>
+                              {opc.text}
+                            </option>
+                          ))}
+                      </select>
+                    </>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        name={field.name}
+                        id={field.name}
+                        value={formValues[field.name] || ""}
+                        onChange={handleInputChange}
+                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                        required={field.required}
+                      />
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -105,9 +141,21 @@ Modal.propTypes = {
       label: PropTypes.string,
       value: PropTypes.any,
       required: PropTypes.bool,
+      list: PropTypes.bool,
     }),
   ),
   onSubmit: PropTypes.func,
+  optionsList: PropTypes.arrayOf(
+    PropTypes.shape({
+      field: PropTypes.string,
+      options: PropTypes.arrayOf(
+        PropTypes.shape({
+          value: PropTypes.string,
+          text: PropTypes.string,
+        }),
+      ),
+    }),
+  ),
 };
 
 export default Modal;
