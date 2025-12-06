@@ -63,7 +63,7 @@ export const quizzesFields = [
     name: "available_since",
     label: "Fecha Desde",
     value: "",
-    required: true,
+    required: false,
   },
   {
     name: "available_until",
