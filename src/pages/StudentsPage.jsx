@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Students from "../supabase/tables/students";
 import { studentsFields } from "../models/fields";
 import Table from "../components/Table";
@@ -26,7 +26,7 @@ const StudentsPage = () => {
     setFilterValue("");
   }
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await Students.getStudents();
@@ -34,27 +34,59 @@ const StudentsPage = () => {
       setLoading(false);
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleNew = () => {
     setModalMode("insert");
     setModalOpen(true);
   };
 
-  const handleEdit = async (id) => {
+  const handleEdit = async (studentId) => {
     setModalMode("edit");
     setModalOpen(true);
-    setStudentId(id);
+    setStudentId(studentId);
 
-    const response = await Students.getStudentsById(id);
-    const student = response.data[0];
+    try {
+      const response = await Students.getStudentsById(studentId);
 
-    const fieldsTmp = [...fields];
-    fieldsTmp.forEach((field) => {
-      field.value = student[field.name];
-    });
-    setFields(fieldsTmp);
+      if (
+        !response ||
+        response.error ||
+        !Array.isArray(response.data) ||
+        response.data.length === 0
+      ) {
+        resetStates();
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo cargar el estudiante. Intente nuevamente.",
+        });
+        return;
+      }
+
+      const student = response.data[0];
+      // Se clonan los campos para no mutar studentsFields (evita que datos de
+      // una edición queden pre-cargados en un siguiente insert). El "id" es la
+      // PK de la tabla students (coincide con el code de v_students) y solo se
+      // puede asignar al crear; al editar queda de solo lectura.
+      setFields(
+        studentsFields.map((field) => ({
+          ...field,
+          value: student[field.name] ?? "",
+          disabled: field.name === "id",
+        })),
+      );
+    } catch (error) {
+      console.error(error);
+      resetStates();
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo cargar el estudiante. Intente nuevamente.",
+      });
+    }
   };
 
   const handleDelete = async (id) => {
@@ -94,9 +126,11 @@ const StudentsPage = () => {
   };
 
   useEffect(() => {
-    resetStates();
+    // fetchData is async; setState runs after await (asynchronous, allowed).
+    // False positive: facebook/react#34905 (fix #35732 not yet released).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -128,7 +162,7 @@ const StudentsPage = () => {
             placeholder="Buscar estudiante ..."
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800"
+            className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
         {loading ? (
@@ -136,7 +170,7 @@ const StudentsPage = () => {
         ) : (
           <>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase">Estudiantes</h2>
+              <h2 className="text-xl font-bold uppercase dark:text-slate-100">Estudiantes</h2>
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -160,7 +194,7 @@ const StudentsPage = () => {
                 />
               </div>
             ) : (
-              <p>No hay registros</p>
+              <p className="dark:text-slate-300">No hay registros</p>
             )}
           </>
         )}

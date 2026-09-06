@@ -1,12 +1,9 @@
-import { supabase, validateConnection } from "../client";
+import { supabase } from "../client";
 import { toast } from "react-toastify";
 
 const Students = {
   getStudents: async () => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("v_students").select();
       return response;
     } catch (error) {
@@ -16,9 +13,9 @@ const Students = {
 
   getStudentsById: async (studentId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
+      // La vista v_students no expone la PK; su columna "code" ES el id de la
+      // tabla students (code === id, verificada contra la base). La UI pasa ese
+      // mismo valor como studentId.
       const response = await supabase
         .from("students")
         .select()
@@ -31,9 +28,6 @@ const Students = {
 
   createStudents: async (student) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("students").insert({ ...student });
       if (response.status === 201) {
         toast.success("Registro creado correctamente");
@@ -48,9 +42,6 @@ const Students = {
 
   updateStudents: async (student, studentId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("students")
         .update({ ...student })
@@ -68,9 +59,6 @@ const Students = {
 
   deleteStudents: async (studentId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("students")
         .delete()

@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const Modal = ({
   modalTitle,
@@ -10,8 +10,11 @@ const Modal = ({
   optionsList = [],
 }) => {
   const [formValues, setFormValues] = useState({});
+  const [prevFields, setPrevFields] = useState(fields);
+  const [prevOpen, setPrevOpen] = useState(isOpen);
 
-  useEffect(() => {
+  if (fields !== prevFields) {
+    setPrevFields(fields);
     if (fields) {
       const initialValues = {};
       fields.forEach((field) => {
@@ -19,13 +22,14 @@ const Modal = ({
       });
       setFormValues(initialValues);
     }
-  }, [fields]);
+  }
 
-  useEffect(() => {
+  if (isOpen !== prevOpen) {
+    setPrevOpen(isOpen);
     if (!isOpen) {
-      clearForm();
+      setFormValues({});
     }
-  }, [isOpen]);
+  }
 
   function clearForm() {
     setFormValues({});
@@ -71,9 +75,9 @@ const Modal = ({
             </button>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
-            {fields.map((field, index) => {
+            {fields.map((field) => {
               return (
-                <div key={index}>
+                <div key={field.name}>
                   <label
                     htmlFor={field.name}
                     className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
@@ -94,8 +98,8 @@ const Modal = ({
                         <option value="">Selecciona una opción</option>
                         {optionsList
                           .find((opc) => opc.name === field.name)
-                          ?.options.map((opc, index) => (
-                            <option key={index} value={opc.value}>
+                          ?.options.map((opc) => (
+                            <option key={opc.value} value={opc.value}>
                               {opc.text}
                             </option>
                           ))}
@@ -109,6 +113,7 @@ const Modal = ({
                         id={field.name}
                         value={formValues[field.name] || ""}
                         onChange={handleInputChange}
+                        disabled={field.disabled}
                         className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
                         required={field.required}
                       />
@@ -142,6 +147,7 @@ Modal.propTypes = {
       value: PropTypes.any,
       required: PropTypes.bool,
       list: PropTypes.bool,
+      disabled: PropTypes.bool,
     }),
   ),
   onSubmit: PropTypes.func,
