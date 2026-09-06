@@ -1,12 +1,9 @@
-import { supabase, validateConnection } from "../client";
+import { supabase } from "../client";
 import { toast } from "react-toastify";
 
 const Items = {
   getItems: async () => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("items").select();
       return response;
     } catch (error) {
@@ -16,9 +13,6 @@ const Items = {
 
   getItemsById: async (id) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("items").select().eq("id", id);
       return response;
     } catch (error) {
@@ -28,9 +22,6 @@ const Items = {
 
   createItems: async (item) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("items").insert({ ...item });
       if (response.status === 201) {
         toast.success("Registro creado correctamente");
@@ -45,9 +36,6 @@ const Items = {
 
   updateItems: async (item, id) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("items")
         .update({ ...item })
@@ -65,9 +53,6 @@ const Items = {
 
   deleteItem: async (itemId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("items").delete().eq("id", itemId);
       if (response.status === 204) {
         toast.success("Registro eliminado correctamente");

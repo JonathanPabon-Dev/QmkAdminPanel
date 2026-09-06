@@ -5,6 +5,20 @@
     <link rel="icon" type="image/svg+xml" href="/graduation.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Qmk | Dashboard</title>
+    <script>
+      // Aplica el tema antes del primer render para evitar un destello de tema
+      // claro cuando el usuario tiene guardado (o el sistema prefiere) oscuro.
+      // La lógica replica getInitialTheme() en src/App.jsx.
+      (function () {
+        try {
+          var stored = localStorage.getItem("qmk-theme");
+          var dark = stored
+            ? stored === "dark"
+            : window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-slate-200 dark:bg-slate-900 dark:text-slate-200">
     <div id="root"></div>

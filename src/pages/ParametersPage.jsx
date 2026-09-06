@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Parameters from "../supabase/tables/parameters";
 import { parametersFields } from "../models/fields";
 import Table from "../components/Table";
@@ -23,7 +23,7 @@ const ParametersPage = () => {
     setParameterId(null);
   }
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await Parameters.getParameters();
@@ -31,8 +31,9 @@ const ParametersPage = () => {
       setLoading(false);
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleNew = () => {
     setModalMode("insert");
@@ -91,9 +92,11 @@ const ParametersPage = () => {
   };
 
   useEffect(() => {
-    resetStates();
+    // fetchData is async; setState runs after await (asynchronous, allowed).
+    // False positive: facebook/react#34905 (fix #35732 not yet released).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   return (
     <>
@@ -104,7 +107,7 @@ const ParametersPage = () => {
           parameters.length > 0 && (
             <>
               <div className="flex w-full items-center justify-between">
-                <h2 className="text-xl font-bold uppercase">Parámetros</h2>
+                <h2 className="text-xl font-bold uppercase dark:text-slate-100">Parámetros</h2>
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"

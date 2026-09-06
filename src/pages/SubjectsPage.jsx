@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Subjects from "../supabase/tables/subjects";
 import { subjectsFields } from "../models/fields";
 import Table from "../components/Table";
@@ -23,7 +23,7 @@ const SubjectsPage = () => {
     setSubjectId(null);
   }
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await Subjects.getSubjects();
@@ -31,8 +31,9 @@ const SubjectsPage = () => {
       setLoading(false);
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleNew = () => {
     setModalMode("insert");
@@ -91,9 +92,11 @@ const SubjectsPage = () => {
   };
 
   useEffect(() => {
-    resetStates();
+    // fetchData is async; setState runs after await (asynchronous, allowed).
+    // False positive: facebook/react#34905 (fix #35732 not yet released).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   return (
     <>
@@ -103,7 +106,7 @@ const SubjectsPage = () => {
         ) : (
           <>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase">Asignaturas</h2>
+              <h2 className="text-xl font-bold uppercase dark:text-slate-100">Asignaturas</h2>
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -126,7 +129,7 @@ const SubjectsPage = () => {
                 />
               </div>
             ) : (
-              <p>No hay registros</p>
+              <p className="dark:text-slate-300">No hay registros</p>
             )}
           </>
         )}

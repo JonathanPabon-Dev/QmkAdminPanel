@@ -1,12 +1,9 @@
-import { supabase, validateConnection } from "../client";
+import { supabase } from "../client";
 import { toast } from "react-toastify";
 
 const Parameters = {
   getParameters: async () => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("parameters").select();
       return response;
     } catch (error) {
@@ -16,9 +13,6 @@ const Parameters = {
 
   getParametersById: async (id) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("parameters").select().eq("id", id);
       return response;
     } catch (error) {
@@ -28,9 +22,6 @@ const Parameters = {
 
   createParameters: async (parameter) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("parameters")
         .insert({ ...parameter });
@@ -47,9 +38,6 @@ const Parameters = {
 
   updateParameters: async (parameter, id) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("parameters")
         .update({ ...parameter })
@@ -67,9 +55,6 @@ const Parameters = {
 
   deleteParameter: async (parameterId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("parameters")
         .delete()
