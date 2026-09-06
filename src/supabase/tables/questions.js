@@ -1,12 +1,9 @@
-import { supabase, validateConnection } from "../client";
+import { supabase } from "../client";
 import { toast } from "react-toastify";
 
 const Questions = {
   getQuestions: async () => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase.from("questions").select();
       return response;
     } catch (error) {
@@ -16,9 +13,6 @@ const Questions = {
 
   getQuestionById: async (questionId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("questions")
         .select()
@@ -29,37 +23,31 @@ const Questions = {
     }
   },
 
-  createQuestions: async (question) => {
+  createQuestions: async (form) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
-      const response = await supabase.from("questions").insert({ ...question });
-      if (response.status === 201) {
-        toast.success("Registro creado correctamente");
-      } else {
+      const response = await supabase.from("questions").insert({ ...form });
+      if (response.status !== 201 || response.error) {
         toast.error("Error al crear el registro");
+        return response;
       }
+      toast.success("Registro creado correctamente");
       return response;
     } catch (error) {
       console.error(error);
     }
   },
 
-  updateQuestions: async (question, questionId) => {
+  updateQuestions: async (form, questionId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("questions")
-        .update({ ...question })
+        .update({ ...form })
         .eq("id", questionId);
-      if (response.status === 204) {
-        toast.success("Registro actualizado correctamente");
-      } else {
+      if (response.status !== 204 || response.error) {
         toast.error("Error al actualizar el registro");
+        return response;
       }
+      toast.success("Registro actualizado correctamente");
       return response;
     } catch (error) {
       console.error(error);
@@ -68,9 +56,6 @@ const Questions = {
 
   deleteQuestions: async (questionId) => {
     try {
-      if (!validateConnection) {
-        throw new Error("Error de conexión.");
-      }
       const response = await supabase
         .from("questions")
         .delete()

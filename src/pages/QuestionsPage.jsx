@@ -1,22 +1,21 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import Questions from "../supabase/tables/questions";
 import { questionsFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
-import Quizzes from "../supabase/tables/quizzes";
+
+const correctOptionsList = [
+  { value: "1", text: "1" },
+  { value: "2", text: "2" },
+  { value: "3", text: "3" },
+  { value: "4", text: "4" },
+];
 
 const QuestionsPage = () => {
-  const correctOptionsList = [
-    { value: "1", text: "1" },
-    { value: "2", text: "2" },
-    { value: "3", text: "3" },
-    { value: "4", text: "4" },
-  ];
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
-  const [optionsList, setOptionsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("");
@@ -34,30 +33,18 @@ const QuestionsPage = () => {
     setFilterValue("");
   }
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const response = await Questions.getQuestions();
       setQuestions(response.data);
 
-      const quizzes = await Quizzes.getQuizzes();
-      const quizzesData = quizzes.data;
-      const quizzesList = quizzesData.map((quiz) => {
-        return {
-          value: quiz.id,
-          text: quiz.id + " | " + quiz.topic,
-        };
-      });
-      setOptionsList([
-        { name: "quiz_id", options: quizzesList },
-        { name: "correct_option", options: correctOptionsList },
-      ]);
-
       setLoading(false);
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
-  };
+  }, []);
 
   const handleNew = () => {
     setModalMode("insert");
@@ -97,11 +84,8 @@ const QuestionsPage = () => {
   };
 
   const handleModalSubmit = async (form) => {
-    const tempId = form.id;
     switch (modalMode) {
       case "insert":
-        form.id = "P-" + form.quiz_id.split("-")[1] + "-" + tempId;
-        console.log(form.id);
         await Questions.createQuestions(form);
         break;
       case "edit":
@@ -119,9 +103,11 @@ const QuestionsPage = () => {
   };
 
   useEffect(() => {
-    resetStates();
+    // fetchData is async; setState runs after await (asynchronous, allowed).
+    // False positive: facebook/react#34905 (fix #35732 not yet released).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -134,9 +120,7 @@ const QuestionsPage = () => {
         return (
           (question.id && question.id.toLowerCase().includes(inputValue)) ||
           (question.question_text &&
-            question.question_text.toLowerCase().includes(inputValue)) ||
-          (question.quiz_id &&
-            question.quiz_id.toLowerCase().includes(inputValue))
+            question.question_text.toLowerCase().includes(inputValue))
         );
       });
       setFilteredQuestions(filtered);
@@ -155,7 +139,7 @@ const QuestionsPage = () => {
             placeholder="Buscar pregunta ..."
             value={filterValue}
             onChange={(e) => setFilterValue(e.target.value)}
-            className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800"
+            className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
           />
         </div>
         {loading ? (
@@ -163,7 +147,7 @@ const QuestionsPage = () => {
         ) : (
           <>
             <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase">Preguntas</h2>
+              <h2 className="text-xl font-bold uppercase dark:text-slate-100">Preguntas</h2>
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
@@ -185,14 +169,13 @@ const QuestionsPage = () => {
                     option_3_text: "Opción 3",
                     option_4_text: "Opción 4",
                     correct_option: "Opción Correcta",
-                    quiz_id: "Quiz",
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
                 />
               </div>
             ) : (
-              <p>No hay registros</p>
+              <p className="dark:text-slate-300">No hay registros</p>
             )}
           </>
         )}
@@ -205,7 +188,7 @@ const QuestionsPage = () => {
         onClose={handleModalClose}
         fields={fields}
         onSubmit={handleModalSubmit}
-        optionsList={optionsList}
+        optionsList={[{ name: "correct_option", options: correctOptionsList }]}
       />
     </>
   );

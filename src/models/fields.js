@@ -82,13 +82,6 @@ export const questionsFields = [
     required: true,
   },
   {
-    name: "quiz_id",
-    label: "Quiz/Prueba",
-    value: "",
-    list: true,
-    required: true,
-  },
-  {
     name: "question_text",
     label: "Pregunta",
     value: "",
