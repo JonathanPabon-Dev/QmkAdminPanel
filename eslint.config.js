@@ -1,38 +1,47 @@
 import js from '@eslint/js'
 import globals from 'globals'
-import react from 'eslint-plugin-react'
+import { globalIgnores } from 'eslint/config'
+import react from '@eslint-react/eslint-plugin'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
+  globalIgnores(['dist/**']),
   {
     files: ['**/*.{js,jsx}'],
-    ignores: ['dist'],
     languageOptions: {
-      ecmaVersion: 2020,
+      ecmaVersion: 'latest',
       globals: globals.browser,
       parserOptions: {
-        ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
       },
     },
-    settings: { react: { version: '18.3' } },
-    plugins: {
-      react,
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
+  },
+  {
+    ...js.configs.recommended,
+    files: ['**/*.{js,jsx}'],
+  },
+  {
+    ...react.configs.recommended,
+    files: ['**/*.{js,jsx}'],
+  },
+  {
+    // The official react-hooks plugin is the canonical source for these analyses.
+    // Turn off @eslint-react's duplicates so each finding is reported once.
     rules: {
-      ...js.configs.recommended.rules,
-      ...react.configs.recommended.rules,
-      ...react.configs['jsx-runtime'].rules,
-      ...reactHooks.configs.recommended.rules,
-      'react/jsx-no-target-blank': 'off',
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      '@eslint-react/exhaustive-deps': 'off',
+      '@eslint-react/rules-of-hooks': 'off',
+      '@eslint-react/set-state-in-effect': 'off',
+      '@eslint-react/set-state-in-render': 'off',
     },
+  },
+  {
+    ...reactHooks.configs.flat.recommended,
+    files: ['**/*.{js,jsx}'],
+  },
+  {
+    ...reactRefresh.configs.vite,
+    files: ['**/*.{js,jsx}'],
   },
 ]
