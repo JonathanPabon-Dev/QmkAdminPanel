@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
+import FormField from "./FormField";
 
 const Modal = ({
   modalTitle,
@@ -46,11 +47,6 @@ const Modal = ({
     setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
   };
 
-  const handleSelectChange = (ev) => {
-    const { name, value } = ev.target;
-    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
-  };
-
   if (!isOpen) return null;
   return (
     <div
@@ -62,7 +58,7 @@ const Modal = ({
     >
       <div className="relative max-h-full w-full max-w-2xl p-4">
         <div className="relative rounded-lg bg-white shadow dark:bg-gray-700">
-          <div className="flex items-center justify-between rounded-t border-b p-4 md:p-5 dark:border-gray-600">
+          <div className="flex items-center justify-between rounded-t border-b p-4 dark:border-gray-600 md:p-5">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
               {modalTitle}
             </h3>
@@ -75,53 +71,18 @@ const Modal = ({
             </button>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
-            {fields.map((field) => {
-              return (
-                <div key={field.name}>
-                  <label
-                    htmlFor={field.name}
-                    className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"
-                  >
-                    {field.label}
-                    {field.required && "*"}
-                  </label>
-                  {field.list ? (
-                    <>
-                      <select
-                        name={field.name}
-                        id={field.name}
-                        value={formValues[field.name] || ""}
-                        onChange={handleSelectChange}
-                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                        required={field.required}
-                      >
-                        <option value="">Selecciona una opción</option>
-                        {optionsList
-                          .find((opc) => opc.name === field.name)
-                          ?.options.map((opc) => (
-                            <option key={opc.value} value={opc.value}>
-                              {opc.text}
-                            </option>
-                          ))}
-                      </select>
-                    </>
-                  ) : (
-                    <>
-                      <input
-                        type="text"
-                        name={field.name}
-                        id={field.name}
-                        value={formValues[field.name] || ""}
-                        onChange={handleInputChange}
-                        disabled={field.disabled}
-                        className="focus:ring-primary-600 focus:border-primary-600 dark:focus:ring-primary-500 dark:focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-                        required={field.required}
-                      />
-                    </>
-                  )}
-                </div>
-              );
-            })}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {fields.map((field) => (
+                <FormField
+                  key={field.name}
+                  field={field}
+                  value={formValues[field.name]}
+                  onChange={handleInputChange}
+                  optionsList={optionsList}
+                  disabled={field.disabled}
+                />
+              ))}
+            </div>
             <div id="error-message" className="text-red-500"></div>
             <button
               type="submit"
@@ -148,6 +109,9 @@ Modal.propTypes = {
       required: PropTypes.bool,
       list: PropTypes.bool,
       disabled: PropTypes.bool,
+      type: PropTypes.string,
+      min: PropTypes.number,
+      colSpan: PropTypes.number,
     }),
   ),
   onSubmit: PropTypes.func,
