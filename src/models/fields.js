@@ -115,6 +115,8 @@ export const questionsFields = [
     value: "",
     list: false,
     required: true,
+    type: "textarea",
+    rows: 3,
     colSpan: 4,
   },
   {
@@ -123,7 +125,9 @@ export const questionsFields = [
     value: "",
     list: false,
     required: true,
-    colSpan: 1,
+    type: "textarea",
+    rows: 2,
+    colSpan: 4,
   },
   {
     name: "option_2_text",
@@ -131,7 +135,9 @@ export const questionsFields = [
     value: "",
     list: false,
     required: true,
-    colSpan: 1,
+    type: "textarea",
+    rows: 2,
+    colSpan: 4,
   },
   {
     name: "option_3_text",
@@ -139,7 +145,9 @@ export const questionsFields = [
     value: "",
     list: false,
     required: true,
-    colSpan: 1,
+    type: "textarea",
+    rows: 2,
+    colSpan: 4,
   },
   {
     name: "option_4_text",
@@ -147,7 +155,9 @@ export const questionsFields = [
     value: "",
     list: false,
     required: true,
-    colSpan: 1,
+    type: "textarea",
+    rows: 2,
+    colSpan: 4,
   },
   {
     name: "correct_option",

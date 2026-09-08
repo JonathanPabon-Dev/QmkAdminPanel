@@ -4,7 +4,10 @@ import { toast } from "react-toastify";
 const Questions = {
   getQuestions: async () => {
     try {
-      const response = await supabase.from("questions").select();
+      const response = await supabase
+        .from("questions")
+        .select()
+        .order("id");
       return response;
     } catch (error) {
       console.error(error);

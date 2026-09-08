@@ -56,6 +56,17 @@ const FormField = ({
               </option>
             ))}
         </select>
+      ) : field.type === "textarea" ? (
+        <textarea
+          name={field.name}
+          id={field.name}
+          value={value || ""}
+          onChange={onChange}
+          rows={field.rows || 3}
+          disabled={disabled}
+          className={inputClass}
+          required={field.required}
+        />
       ) : (
         <input
           type={field.type || "text"}
@@ -83,6 +94,7 @@ FormField.propTypes = {
     disabled: PropTypes.bool,
     hidden: PropTypes.bool,
     type: PropTypes.string,
+    rows: PropTypes.number,
     min: PropTypes.number,
     colSpan: PropTypes.number,
     colStart: PropTypes.number,
