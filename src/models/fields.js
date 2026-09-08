@@ -40,8 +40,9 @@ export const parametersFields = [
 ];
 
 // Layout del formulario de Cuestionarios (spec del usuario):
-// Fila 1 = ID(1) · Tema(3); Fila 2 = Grado(1) · Asignatura(1) · Nº Preguntas(1);
-// Fila 3 = Fecha Desde(1) · Hora Desde(1) · Fecha Hasta(1) · Hora Hasta(1).
+// Fila 1 = ID(1) · Tema(3); Fila 2 = Asignatura(1) · Nº Preguntas(1).
+// Los cursos con su ventana de disponibilidad se gestionan en la etapa
+// "Cursos" del flujo (tabla quiz_courses), no aquí.
 export const quizzesFields = [
   {
     name: "id",
@@ -54,15 +55,8 @@ export const quizzesFields = [
     name: "topic",
     label: "Tema",
     value: "",
-    required: true,
+    required: false,
     colSpan: 3,
-  },
-  {
-    name: "grade_level",
-    label: "Grado",
-    value: "",
-    required: true,
-    colSpan: 1,
   },
   {
     name: "subject_id",
@@ -76,42 +70,9 @@ export const quizzesFields = [
     name: "question_count",
     label: "Nº Preguntas a Evaluar",
     value: "",
-    required: false,
+    required: true,
     type: "number",
     min: 1,
-    colSpan: 1,
-  },
-  {
-    name: "available_since",
-    label: "Fecha Desde",
-    value: "",
-    required: false,
-    type: "date",
-    colSpan: 1,
-    colStart: 1,
-  },
-  {
-    name: "available_since_time",
-    label: "Hora Desde",
-    value: "",
-    required: false,
-    type: "time",
-    colSpan: 1,
-  },
-  {
-    name: "available_until",
-    label: "Fecha Hasta",
-    value: "",
-    required: false,
-    type: "date",
-    colSpan: 1,
-  },
-  {
-    name: "available_until_time",
-    label: "Hora Hasta",
-    value: "",
-    required: false,
-    type: "time",
     colSpan: 1,
   },
 ];

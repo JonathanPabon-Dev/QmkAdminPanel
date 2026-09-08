@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 const Quizzes = {
   getQuizzes: async () => {
     try {
-      const response = await supabase.from("quizzes").select();
+      // Incluye quiz_courses para mostrar los cursos asociados en el listado.
+      const response = await supabase.from("quizzes").select("*, quiz_courses(*)");
       return response;
     } catch (error) {
       console.error(error);
@@ -13,7 +14,10 @@ const Quizzes = {
 
   getQuizById: async (quizId) => {
     try {
-      const response = await supabase.from("quizzes").select().eq("id", quizId);
+      const response = await supabase
+        .from("quizzes")
+        .select("*, quiz_courses(*)")
+        .eq("id", quizId);
       return response;
     } catch (error) {
       console.error(error);
@@ -135,6 +139,43 @@ const Quizzes = {
         toast.error("Error al eliminar el registro");
       }
       return response;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  // Reemplaza las relaciones quiz_courses del quiz por la lista dada. Cada
+  // elemento trae course_id y su ventana (available_since/until/time).
+  syncQuizCourses: async (quizId, courses) => {
+    try {
+      const deleteResponse = await supabase
+        .from("quiz_courses")
+        .delete()
+        .eq("quiz_id", quizId);
+      if (
+        deleteResponse.status !== 204 &&
+        deleteResponse.status !== 200 &&
+        deleteResponse.error
+      ) {
+        toast.error("Error al actualizar los cursos");
+        return deleteResponse;
+      }
+      if (courses.length === 0) return deleteResponse;
+      const rows = courses.map((course) => ({
+        quiz_id: quizId,
+        course_id: course.course_id,
+        available_since: course.available_since || null,
+        available_until: course.available_until || null,
+        available_since_time: course.available_since_time || null,
+        available_until_time: course.available_until_time || null,
+      }));
+      const insertResponse = await supabase
+        .from("quiz_courses")
+        .insert(rows);
+      if (insertResponse.error) {
+        toast.error("Error al guardar los cursos");
+      }
+      return insertResponse;
     } catch (error) {
       console.error(error);
     }

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 
-const Table = ({ headers, dataList, onHandleEdit, onHandleDelete }) => {
+const Table = ({ headers, dataList, onHandleEdit, onHandleDelete, onHandleView }) => {
   return (
     <div className="relative mx-auto w-fit overflow-x-auto rounded-xl shadow-md">
       <table className="table-auto text-left text-sm text-gray-500 dark:text-gray-400">
@@ -31,6 +31,16 @@ const Table = ({ headers, dataList, onHandleEdit, onHandleDelete }) => {
                   v_students expone su PK como "code" (sin columna id).
                   Se prefiere "id" cuando existe. */}
               <td className="flex gap-3 px-6 py-4">
+                {onHandleView && (
+                  <button
+                    type="button"
+                    className="size-8 rounded-lg border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-white"
+                    onClick={() => onHandleView(data.id ?? data.code)}
+                    title="Ver detalle"
+                  >
+                    <i className="fa fa-eye" />
+                  </button>
+                )}
                 <button
                   type="button"
                   className="size-8 rounded-lg border-2 border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white"
@@ -59,6 +69,7 @@ Table.propTypes = {
   dataList: PropTypes.arrayOf(PropTypes.object),
   onHandleEdit: PropTypes.func,
   onHandleDelete: PropTypes.func,
+  onHandleView: PropTypes.func,
 };
 
 export default Table;
