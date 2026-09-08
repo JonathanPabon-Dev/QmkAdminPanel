@@ -41,7 +41,7 @@ export const parametersFields = [
 
 // Layout del formulario de Cuestionarios (spec del usuario):
 // Fila 1 = ID(1) · Tema(3); Fila 2 = Grado(1) · Asignatura(1) · Nº Preguntas(1);
-// Fila 3 = Fecha Desde(1) · Fecha Hasta(1).
+// Fila 3 = Fecha Desde(1) · Hora Desde(1) · Fecha Hasta(1) · Hora Hasta(1).
 export const quizzesFields = [
   {
     name: "id",
@@ -91,11 +91,27 @@ export const quizzesFields = [
     colStart: 1,
   },
   {
+    name: "available_since_time",
+    label: "Hora Desde",
+    value: "",
+    required: false,
+    type: "time",
+    colSpan: 1,
+  },
+  {
     name: "available_until",
     label: "Fecha Hasta",
     value: "",
     required: false,
     type: "date",
+    colSpan: 1,
+  },
+  {
+    name: "available_until_time",
+    label: "Hora Hasta",
+    value: "",
+    required: false,
+    type: "time",
     colSpan: 1,
   },
 ];

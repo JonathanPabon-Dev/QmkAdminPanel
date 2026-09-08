@@ -506,7 +506,9 @@ const QuizzesPage = () => {
                         grade_level: "Grado",
                         subject_id: "Asignatura",
                         available_since: "Fecha Desde",
+                        available_since_time: "Hora Desde",
                         available_until: "Fecha Hasta",
+                        available_until_time: "Hora Hasta",
                         question_count: "Nº Preguntas",
                       }}
                       onHandleEdit={handleEdit}
