@@ -27,6 +27,7 @@ const FormField = ({
 }) => {
   const colSpanClass = colSpanClasses[field.colSpan] ?? "";
   const colStartClass = colStartClasses[field.colStart] ?? "";
+  if (field.hidden) return null;
   return (
     <div className={`${colSpanClass} ${colStartClass}`.trim()}>
       <label
@@ -80,6 +81,7 @@ FormField.propTypes = {
     required: PropTypes.bool,
     list: PropTypes.bool,
     disabled: PropTypes.bool,
+    hidden: PropTypes.bool,
     type: PropTypes.string,
     min: PropTypes.number,
     colSpan: PropTypes.number,

@@ -9,6 +9,7 @@ const Modal = ({
   fields,
   onSubmit,
   optionsList = [],
+  onFieldChange = null,
 }) => {
   const [formValues, setFormValues] = useState({});
   const [prevFields, setPrevFields] = useState(fields);
@@ -44,7 +45,14 @@ const Modal = ({
 
   const handleInputChange = (ev) => {
     const { name, value } = ev.target;
-    setFormValues((prevValues) => ({ ...prevValues, [name]: value }));
+    setFormValues((prevValues) => {
+      // onFieldChange puede derivar/ajustar valores de otros campos y devolver
+      // el objeto completo; null significa cambio normal de un solo campo.
+      const adjusted = onFieldChange
+        ? onFieldChange(name, value, { ...prevValues })
+        : null;
+      return adjusted ?? { ...prevValues, [name]: value };
+    });
   };
 
   if (!isOpen) return null;
@@ -126,6 +134,7 @@ Modal.propTypes = {
       ),
     }),
   ),
+  onFieldChange: PropTypes.func,
 };
 
 export default Modal;

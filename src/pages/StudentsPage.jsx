@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import Students from "../supabase/tables/students";
+import Courses from "../supabase/tables/courses";
 import { studentsFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
@@ -15,6 +16,9 @@ const StudentsPage = () => {
   const [fields, setFields] = useState(studentsFields);
   const [studentId, setStudentId] = useState(null);
   const [filterValue, setFilterValue] = useState("");
+  const [filterCourse, setFilterCourse] = useState("");
+  // Opciones del select de Curso, en el formato que espera FormField.
+  const [courseOptions, setCourseOptions] = useState([]);
 
   function resetStates() {
     setStudents([]);
@@ -35,6 +39,23 @@ const StudentsPage = () => {
     } catch (error) {
       console.error(error);
       setLoading(false);
+    }
+  }, []);
+
+  const loadCourses = useCallback(async () => {
+    try {
+      const response = await Courses.getCourses();
+      setCourseOptions([
+        {
+          name: "course_id",
+          options: (response.data ?? []).map((course) => ({
+            value: course.id,
+            text: course.id,
+          })),
+        },
+      ]);
+    } catch (error) {
+      console.error(error);
     }
   }, []);
 
@@ -125,36 +146,58 @@ const StudentsPage = () => {
     await fetchData();
   };
 
+  // Autocompleta el grado (oculto) cuando se selecciona un curso: el id del
+  // curso tiene el formato "10-1" (grado-salón), por convención establecida.
+  const handleFieldChange = (name, value, values) => {
+    if (name === "course_id" && value) {
+      return { ...values, [name]: value, grade_level: value.split("-")[0] };
+    }
+    return null;
+  };
+
   useEffect(() => {
     // fetchData is async; setState runs after await (asynchronous, allowed).
     // False positive: facebook/react#34905 (fix #35732 not yet released).
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
-  }, [fetchData]);
+    loadCourses();
+  }, [fetchData, loadCourses]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (!filterValue.trim()) {
-        setFilteredStudents(students);
-        return;
-      }
-      const filtered = students.filter((student) => {
-        const filter = filterValue.toLowerCase();
-        return (
-          student.code.toString().includes(filter) ||
-          (student.name && student.name.toLowerCase().includes(filter)) ||
-          (student.grade && student.grade.includes(filter))
+      let filtered = students;
+      if (filterCourse) {
+        filtered = filtered.filter(
+          (student) => student.grade === filterCourse,
         );
+      }
+      if (filterValue.trim()) {
+        const filter = filterValue.toLowerCase();
+        filtered = filtered.filter((student) => {
+          return (
+            student.code.toString().includes(filter) ||
+            (student.number_list &&
+              student.number_list.toString().includes(filter)) ||
+            (student.name && student.name.toLowerCase().includes(filter)) ||
+            (student.grade && student.grade.includes(filter))
+          );
+        });
+      }
+      // Orden: primero por Grado (course_id), luego por Nombre.
+      filtered = [...filtered].sort((a, b) => {
+        const gradeCompare = (a.grade ?? "").localeCompare(b.grade ?? "");
+        if (gradeCompare !== 0) return gradeCompare;
+        return (a.name ?? "").localeCompare(b.name ?? "");
       });
       setFilteredStudents(filtered);
     }, 300);
     return () => clearTimeout(timer);
-  }, [filterValue, students]);
+  }, [filterValue, filterCourse, students]);
 
   return (
     <>
       <div className="container mx-auto my-16 flex w-fit min-w-[15%] max-w-[90%] flex-col items-center justify-center gap-2">
-        <div className="mb-10 flex w-full">
+        <div className="mb-10 flex w-full gap-2">
           <input
             type="search"
             name="studentSearch"
@@ -164,6 +207,20 @@ const StudentsPage = () => {
             onChange={(e) => setFilterValue(e.target.value)}
             className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
           />
+          <select
+            name="courseFilter"
+            id="courseFilter"
+            value={filterCourse}
+            onChange={(e) => setFilterCourse(e.target.value)}
+            className="rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
+          >
+            <option value="">Todos los cursos</option>
+            {(courseOptions[0]?.options ?? []).map((course) => (
+              <option key={course.value} value={course.value}>
+                {course.text}
+              </option>
+            ))}
+          </select>
         </div>
         {loading ? (
           <Loader className={"size-10"} />
@@ -186,6 +243,7 @@ const StudentsPage = () => {
                   dataList={filteredStudents}
                   headers={{
                     code: "Código",
+                    number_list: "No. Lista",
                     name: "Nombre",
                     grade: "Grado",
                   }}
@@ -207,6 +265,8 @@ const StudentsPage = () => {
         onClose={handleModalClose}
         fields={fields}
         onSubmit={handleModalSubmit}
+        optionsList={courseOptions}
+        onFieldChange={handleFieldChange}
       />
     </>
   );

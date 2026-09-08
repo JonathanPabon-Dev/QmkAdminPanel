@@ -176,6 +176,8 @@ export const subjectsFields = [
   },
 ];
 
+// grade_level va oculto: se autocompleta desde course_id ("10-1" -> 10) en
+// StudentsPage, pero se mantiene en el payload y permite filtrar por grado.
 export const studentsFields = [
   {
     name: "id",
@@ -189,6 +191,14 @@ export const studentsFields = [
     label: "No. Lista",
     value: "",
     required: true,
+    colSpan: 1,
+  },
+  {
+    name: "course_id",
+    label: "Curso",
+    value: "",
+    required: true,
+    list: true,
     colSpan: 1,
   },
   {
@@ -224,13 +234,7 @@ export const studentsFields = [
     label: "Grado",
     value: "",
     required: true,
-    colSpan: 1,
-  },
-  {
-    name: "course",
-    label: "Curso/Salón",
-    value: "",
-    required: true,
+    hidden: true,
     colSpan: 1,
   },
 ];
