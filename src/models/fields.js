@@ -40,7 +40,8 @@ export const parametersFields = [
 ];
 
 // Layout del formulario de Cuestionarios (spec del usuario):
-// Fila 1 = ID(1) · Tema(3); Fila 2 = Asignatura(1) · Nº Preguntas(1).
+// Fila 1 = ID(1) · Tema(3); Fila 2 = Asignatura(1) · Nº Preguntas(1) ·
+// Duración(1) · (celda libre).
 // Los cursos con su ventana de disponibilidad se gestionan en la etapa
 // "Cursos" del flujo (tabla quiz_courses), no aquí.
 export const quizzesFields = [
@@ -71,6 +72,15 @@ export const quizzesFields = [
     label: "Nº Preguntas a Evaluar",
     value: "",
     required: true,
+    type: "number",
+    min: 1,
+    colSpan: 1,
+  },
+  {
+    name: "duration_seconds",
+    label: "Duración (segundos)",
+    value: "",
+    required: false,
     type: "number",
     min: 1,
     colSpan: 1,

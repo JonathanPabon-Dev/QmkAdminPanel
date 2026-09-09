@@ -900,6 +900,7 @@ const QuizzesPage = () => {
                         courses_display: "Cursos",
                         subject_id: "Asignatura",
                         question_count: "Nº Preguntas",
+                        duration_seconds: "Duración",
                       }}
                       onHandleEdit={handleEdit}
                       onHandleView={handleView}
