@@ -67,6 +67,25 @@ const FormField = ({
           className={inputClass}
           required={field.required}
         />
+      ) : field.type === "file" ? (
+        <>
+          <input
+            type="file"
+            accept={field.accept || "image/*"}
+            name={field.name}
+            id={field.name}
+            onChange={onChange}
+            disabled={disabled}
+            className={inputClass}
+          />
+          {typeof value === "string" && value !== "" && (
+            <img
+              src={value}
+              alt={field.label}
+              className="mt-2 max-h-24 rounded border border-gray-300 dark:border-gray-600"
+            />
+          )}
+        </>
       ) : (
         <input
           type={field.type || "text"}
@@ -94,6 +113,7 @@ FormField.propTypes = {
     disabled: PropTypes.bool,
     hidden: PropTypes.bool,
     type: PropTypes.string,
+    accept: PropTypes.string,
     rows: PropTypes.number,
     min: PropTypes.number,
     colSpan: PropTypes.number,

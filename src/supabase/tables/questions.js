@@ -73,6 +73,33 @@ const Questions = {
       console.error(error);
     }
   },
+
+  // Uploads an option image to the public bucket and returns its public URL.
+  // On failure it toasts and returns { error } (no throw) so the caller can
+  // decide how to react; the Modal keeps the previous value in that case.
+  uploadOptionImage: async (file) => {
+    try {
+      const path = `question-options/${Date.now()}-${file.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "_"
+      )}`;
+      const { error } = await supabase.storage
+        .from("question-options")
+        .upload(path, file);
+      if (error) {
+        toast.error("Error al subir la imagen");
+        return { error };
+      }
+      const { data } = supabase.storage
+        .from("question-options")
+        .getPublicUrl(path);
+      return data.publicUrl;
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al subir la imagen");
+      return { error };
+    }
+  },
 };
 
 export default Questions;

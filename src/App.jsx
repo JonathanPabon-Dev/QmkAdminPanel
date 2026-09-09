@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import { tables } from "./models/tables";
+import { supabase } from "./supabase/client";
+import LoginPage from "./pages/LoginPage";
+import Loader from "./components/Loader";
 
 const THEME_STORAGE_KEY = "qmk-theme";
 
@@ -19,6 +22,8 @@ const getInitialTheme = () => {
 const App = () => {
   const [selectedTable, setSelectedTable] = useState(tables[0].name);
   const [theme, setTheme] = useState(getInitialTheme);
+  const [session, setSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -26,13 +31,50 @@ const App = () => {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme, isDark]);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Sesión cerrada.");
   };
 
   const selected =
     tables.find((table) => table.name === selectedTable) ?? tables[0];
   const PageComponent = selected.component;
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
+        <Loader className="mx-auto" />
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <>
+        <LoginPage />
+        <ToastContainer theme={isDark ? "dark" : "light"} />
+      </>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-100 dark:bg-slate-900">
@@ -65,16 +107,35 @@ const App = () => {
             })}
           </ul>
         </nav>
+        <div className="m-1 rounded-md border border-slate-800 p-2">
+          <p className="truncate text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
+            <i className="fa fa-user me-2 opacity-50" />
+            {session.user.email}
+          </p>
+        </div>
         <div className="border-t border-slate-200 p-3 dark:border-slate-700">
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-            title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-            className="size-8 rounded-lg border-2 border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-          >
-            <i className={isDark ? "fa fa-sun" : "fa fa-moon"} />
-          </button>
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={
+                isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+              }
+              title={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              className="size-8 shrink-0 rounded-lg border-2 border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            >
+              <i className={isDark ? "fa fa-sun" : "fa fa-moon"} />
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+              className="inline-flex size-8 items-center justify-center rounded-lg bg-red-600 text-white transition-colors hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 dark:bg-red-700 dark:hover:bg-red-600"
+            >
+              <i className="fa fa-right-from-bracket" />
+            </button>
+          </div>
         </div>
       </aside>
 

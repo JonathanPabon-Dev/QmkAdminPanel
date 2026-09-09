@@ -13,6 +13,21 @@ const correctOptionsList = [
   { value: "4", text: "4" },
 ];
 
+// Renders the option text and, when present, its thumbnail below it.
+// The image column name derives from the option index (option_1_image_url...).
+const makeOptionRenderer = (optionIndex) => (text, row) => (
+  <>
+    {text}
+    {row[`option_${optionIndex}_image_url`] && (
+      <img
+        src={row[`option_${optionIndex}_image_url`]}
+        alt={`Opción ${optionIndex}`}
+        className="mt-1 max-h-16 rounded border border-gray-300 dark:border-gray-600"
+      />
+    )}
+  </>
+);
+
 const QuestionsPage = () => {
   const [questions, setQuestions] = useState([]);
   const [filteredQuestions, setFilteredQuestions] = useState([]);
@@ -102,6 +117,26 @@ const QuestionsPage = () => {
     await fetchData();
   };
 
+  // Cada opción exige texto O imagen; si falta ambos se muestra el obligatorio.
+  const validateOptionForm = (values) => {
+    for (let i = 1; i <= 4; i += 1) {
+      const text = (values[`option_${i}_text`] || "").trim();
+      const image = values[`option_${i}_image_url`] || "";
+      if (!text && !image) {
+        return `La opción ${i} es obligatoria: agrega texto o imagen.`;
+      }
+    }
+    return null;
+  };
+
+  // Uploads the option image and returns the public URL (or null on failure);
+  // the error toast is shown inside Questions.uploadOptionImage.
+  const handleFileChange = async (name, file) => {
+    const result = await Questions.uploadOptionImage(file);
+    if (result.error) return null;
+    return result;
+  };
+
   useEffect(() => {
     // fetchData is async; setState runs after await (asynchronous, allowed).
     // False positive: facebook/react#34905 (fix #35732 not yet released).
@@ -170,6 +205,12 @@ const QuestionsPage = () => {
                     option_4_text: "Opción 4",
                     correct_option: "Opción Correcta",
                   }}
+                  renderers={{
+                    option_1_text: makeOptionRenderer(1),
+                    option_2_text: makeOptionRenderer(2),
+                    option_3_text: makeOptionRenderer(3),
+                    option_4_text: makeOptionRenderer(4),
+                  }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
                 />
@@ -189,6 +230,8 @@ const QuestionsPage = () => {
         fields={fields}
         onSubmit={handleModalSubmit}
         optionsList={[{ name: "correct_option", options: correctOptionsList }]}
+        onFileChange={handleFileChange}
+        validateForm={validateOptionForm}
       />
     </>
   );

@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
+import { toast } from "react-toastify";
 import FormField from "./FormField";
 
 const Modal = ({
@@ -10,8 +11,11 @@ const Modal = ({
   onSubmit,
   optionsList = [],
   onFieldChange = null,
+  onFileChange = null,
+  validateForm = null,
 }) => {
   const [formValues, setFormValues] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
   const [prevFields, setPrevFields] = useState(fields);
   const [prevOpen, setPrevOpen] = useState(isOpen);
 
@@ -30,6 +34,7 @@ const Modal = ({
     setPrevOpen(isOpen);
     if (!isOpen) {
       setFormValues({});
+      setErrorMessage("");
     }
   }
 
@@ -39,12 +44,39 @@ const Modal = ({
 
   const handleSubmit = (ev) => {
     ev.preventDefault();
+
+    // Validación opcional por página (p. ej. "texto O imagen" en opciones de
+    // preguntas): bloquea el envío y muestra el mensaje sin limpiar el form.
+    if (validateForm) {
+      const error = validateForm(formValues);
+      if (error) {
+        setErrorMessage(error);
+        return;
+      }
+    }
+
+    setErrorMessage("");
     onSubmit(formValues);
     clearForm();
   };
 
-  const handleInputChange = (ev) => {
+  const handleInputChange = async (ev) => {
+    if (errorMessage) setErrorMessage("");
     const { name, value } = ev.target;
+    // File input: it is uncontrolled (no usable "value"); the file is uploaded
+    // through onFileChange, which resolves to the public URL on success.
+    if (ev.target.files && ev.target.files[0]) {
+      if (!onFileChange) return;
+      try {
+        const url = await onFileChange(name, ev.target.files[0]);
+        if (typeof url === "string" && url !== "") {
+          setFormValues((prevValues) => ({ ...prevValues, [name]: url }));
+        }
+      } catch {
+        toast.error("Error al subir la imagen");
+      }
+      return;
+    }
     setFormValues((prevValues) => {
       // onFieldChange puede derivar/ajustar valores de otros campos y devolver
       // el objeto completo; null significa cambio normal de un solo campo.
@@ -91,7 +123,9 @@ const Modal = ({
                 />
               ))}
             </div>
-            <div id="error-message" className="text-red-500"></div>
+            <div id="error-message" className="min-h-5 text-sm text-red-500">
+              {errorMessage}
+            </div>
             <button
               type="submit"
               className="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm font-bold text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
@@ -135,6 +169,8 @@ Modal.propTypes = {
     }),
   ),
   onFieldChange: PropTypes.func,
+  onFileChange: PropTypes.func,
+  validateForm: PropTypes.func,
 };
 
 export default Modal;

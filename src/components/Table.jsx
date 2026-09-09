@@ -1,6 +1,13 @@
 import PropTypes from "prop-types";
 
-const Table = ({ headers, dataList, onHandleEdit, onHandleDelete, onHandleView }) => {
+const Table = ({
+  headers,
+  dataList,
+  onHandleEdit,
+  onHandleDelete,
+  onHandleView,
+  renderers = {},
+}) => {
   return (
     <div className="relative mx-auto w-fit overflow-x-auto rounded-xl shadow-md">
       <table className="table-auto text-left text-sm text-gray-500 dark:text-gray-400">
@@ -24,7 +31,9 @@ const Table = ({ headers, dataList, onHandleEdit, onHandleDelete, onHandleView }
             >
               {Object.keys(headers).map((key) => (
                 <td key={key} className="px-6 py-4 text-slate-700 dark:text-slate-200">
-                  {data[key]}
+                  {renderers[key]
+                    ? renderers[key](data[key], data)
+                    : data[key]}
                 </td>
               ))}
               {/* Las filas de tablas reales traen su PK en "id"; la vista
@@ -70,6 +79,7 @@ Table.propTypes = {
   onHandleEdit: PropTypes.func,
   onHandleDelete: PropTypes.func,
   onHandleView: PropTypes.func,
+  renderers: PropTypes.object,
 };
 
 export default Table;
