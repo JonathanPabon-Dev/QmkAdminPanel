@@ -3,6 +3,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { tables } from "./models/tables";
 import { supabase } from "./supabase/client";
 import LoginPage from "./pages/LoginPage";
+import InvitePage from "./pages/InvitePage";
 import Loader from "./components/Loader";
 
 const THEME_STORAGE_KEY = "qmk-theme";
@@ -24,6 +25,9 @@ const App = () => {
   const [theme, setTheme] = useState(getInitialTheme);
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [inviteMode, setInviteMode] = useState(() =>
+    window.location.hash.includes("type=invite"),
+  );
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -71,6 +75,24 @@ const App = () => {
     return (
       <>
         <LoginPage />
+        <ToastContainer theme={isDark ? "dark" : "light"} />
+      </>
+    );
+  }
+
+  if (inviteMode) {
+    return (
+      <>
+        <InvitePage
+          onComplete={() => {
+            window.history.replaceState(
+              null,
+              "",
+              window.location.pathname + window.location.search,
+            );
+            setInviteMode(false);
+          }}
+        />
         <ToastContainer theme={isDark ? "dark" : "light"} />
       </>
     );

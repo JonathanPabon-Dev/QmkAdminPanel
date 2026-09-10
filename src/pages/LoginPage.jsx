@@ -43,6 +43,27 @@ const LoginPage = () => {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    setPending(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + import.meta.env.BASE_URL,
+        },
+      });
+
+      if (!cancelledRef.current && error) {
+        toast.error("No se pudo iniciar sesión con Google. Intenta de nuevo.");
+      }
+    } finally {
+      if (!cancelledRef.current) {
+        setPending(false);
+      }
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -115,6 +136,24 @@ const LoginPage = () => {
             )}
           </button>
         </form>
+
+        <div className="my-5 flex items-center gap-3">
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs uppercase tracking-wide text-slate-400">
+            o
+          </span>
+          <span className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        </div>
+
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          disabled={pending}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-800"
+        >
+          <i className="fa-brands fa-google text-base" />
+          Continuar con Google
+        </button>
       </div>
     </div>
   );
