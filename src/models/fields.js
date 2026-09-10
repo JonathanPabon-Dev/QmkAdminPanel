@@ -101,10 +101,21 @@ export const questionsFields = [
     label: "Pregunta",
     value: "",
     list: false,
-    required: true,
+    required: false,
     type: "textarea",
     rows: 3,
-    colSpan: 4,
+    colSpan: 2,
+    colStart: 1,
+  },
+  {
+    name: "question_image_url",
+    label: "Imagen Pregunta",
+    value: "",
+    list: false,
+    required: false,
+    type: "file",
+    accept: "image/*",
+    colSpan: 2,
   },
   // Las opciones admiten texto O imagen; el "required" individual se quita y
   // la validación texto-o-imagen la hace QuestionsPage vía validateForm.

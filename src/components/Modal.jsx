@@ -68,7 +68,13 @@ const Modal = ({
     if (ev.target.files && ev.target.files[0]) {
       if (!onFileChange) return;
       try {
-        const url = await onFileChange(name, ev.target.files[0]);
+        // El valor anterior se reenvía para que la página pueda borrar el
+        // archivo reemplazado del bucket (edit) o el upload previo (insert).
+        const url = await onFileChange(
+          name,
+          ev.target.files[0],
+          formValues[name]
+        );
         if (typeof url === "string" && url !== "") {
           setFormValues((prevValues) => ({ ...prevValues, [name]: url }));
         }

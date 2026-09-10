@@ -5,6 +5,7 @@ import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 
 const correctOptionsList = [
   { value: "1", text: "1" },
@@ -13,15 +14,16 @@ const correctOptionsList = [
   { value: "4", text: "4" },
 ];
 
-// Renders the option text and, when present, its thumbnail below it.
-// The image column name derives from the option index (option_1_image_url...).
-const makeOptionRenderer = (optionIndex) => (text, row) => (
+// Renders the field text and, when present, its thumbnail below it.
+// The image column name derives from the field (question_image_url,
+// option_1_image_url...).
+const makeTextWithImageRenderer = (imageKey, altText) => (text, row) => (
   <>
     {text}
-    {row[`option_${optionIndex}_image_url`] && (
+    {row[imageKey] && (
       <img
-        src={row[`option_${optionIndex}_image_url`]}
-        alt={`Opción ${optionIndex}`}
+        src={row[imageKey]}
+        alt={altText}
         className="mt-1 max-h-16 rounded border border-gray-300 dark:border-gray-600"
       />
     )}
@@ -92,7 +94,11 @@ const QuestionsPage = () => {
       cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        await Questions.deleteQuestions(id);
+        // Se borra la pregunta completa (no solo el id) para que la limpieza
+        // de imágenes del bucket pueda extraer las URLs desde el registro.
+        const response = await Questions.getQuestionById(id);
+        const question = response.data ? response.data[0] : null;
+        await Questions.deleteQuestions(question || { id });
         await fetchData();
       }
     });
@@ -117,8 +123,14 @@ const QuestionsPage = () => {
     await fetchData();
   };
 
-  // Cada opción exige texto O imagen; si falta ambos se muestra el obligatorio.
-  const validateOptionForm = (values) => {
+  // La pregunta y cada opción exigen texto O imagen; si falta ambos se
+  // muestra el obligatorio.
+  const validateQuestionForm = (values) => {
+    const questionText = (values.question_text || "").trim();
+    const questionImage = values.question_image_url || "";
+    if (!questionText && !questionImage) {
+      return "La pregunta es obligatoria: agrega texto o imagen.";
+    }
     for (let i = 1; i <= 4; i += 1) {
       const text = (values[`option_${i}_text`] || "").trim();
       const image = values[`option_${i}_image_url`] || "";
@@ -129,11 +141,20 @@ const QuestionsPage = () => {
     return null;
   };
 
-  // Uploads the option image and returns the public URL (or null on failure);
-  // the error toast is shown inside Questions.uploadOptionImage.
-  const handleFileChange = async (name, file) => {
+  // Uploads the new image and returns the public URL (or null on failure);
+  // if the field already had an image, the replaced file is removed from the
+  // bucket (best effort). The error toasts come from the table module.
+  const handleFileChange = async (name, file, previousUrl) => {
     const result = await Questions.uploadOptionImage(file);
     if (result.error) return null;
+    if (previousUrl && previousUrl !== result) {
+      const cleanup = await Questions.removeImage(previousUrl);
+      if (cleanup.error) {
+        toast.warn(
+          "La imagen nueva se subió, pero la anterior no pudo borrarse."
+        );
+      }
+    }
     return result;
   };
 
@@ -206,10 +227,26 @@ const QuestionsPage = () => {
                     correct_option: "Opción Correcta",
                   }}
                   renderers={{
-                    option_1_text: makeOptionRenderer(1),
-                    option_2_text: makeOptionRenderer(2),
-                    option_3_text: makeOptionRenderer(3),
-                    option_4_text: makeOptionRenderer(4),
+                    question_text: makeTextWithImageRenderer(
+                      "question_image_url",
+                      "Pregunta"
+                    ),
+                    option_1_text: makeTextWithImageRenderer(
+                      "option_1_image_url",
+                      "Opción 1"
+                    ),
+                    option_2_text: makeTextWithImageRenderer(
+                      "option_2_image_url",
+                      "Opción 2"
+                    ),
+                    option_3_text: makeTextWithImageRenderer(
+                      "option_3_image_url",
+                      "Opción 3"
+                    ),
+                    option_4_text: makeTextWithImageRenderer(
+                      "option_4_image_url",
+                      "Opción 4"
+                    ),
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
@@ -231,7 +268,7 @@ const QuestionsPage = () => {
         onSubmit={handleModalSubmit}
         optionsList={[{ name: "correct_option", options: correctOptionsList }]}
         onFileChange={handleFileChange}
-        validateForm={validateOptionForm}
+        validateForm={validateQuestionForm}
       />
     </>
   );

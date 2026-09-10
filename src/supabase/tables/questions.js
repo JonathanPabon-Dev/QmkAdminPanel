@@ -1,6 +1,26 @@
 import { supabase } from "../client";
 import { toast } from "react-toastify";
 
+const IMAGE_BUCKET = "question-options";
+const IMAGE_KEYS = [
+  "question_image_url",
+  "option_1_image_url",
+  "option_2_image_url",
+  "option_3_image_url",
+  "option_4_image_url",
+];
+
+// Extracts a storage path (relative to the bucket) from a public URL, or
+// null when the URL does not belong to this bucket (defensive: never try to
+// remove files that live elsewhere).
+const storagePathFromPublicUrl = (publicUrl) => {
+  if (!publicUrl || typeof publicUrl !== "string") return null;
+  const marker = `/object/public/${IMAGE_BUCKET}/`;
+  const index = publicUrl.indexOf(marker);
+  if (index === -1) return null;
+  return publicUrl.slice(index + marker.length).split("?")[0];
+};
+
 const Questions = {
   getQuestions: async () => {
     try {
@@ -57,14 +77,39 @@ const Questions = {
     }
   },
 
-  deleteQuestions: async (questionId) => {
+  // Best-effort cleanup of every image attached to a question (question and
+  // its four options). Never throws; returns the storage response so callers
+  // can decide how to surface a cleanup failure.
+  removeQuestionImages: async (question) => {
+    const paths = IMAGE_KEYS.map((key) =>
+      storagePathFromPublicUrl(question?.[key])
+    ).filter(Boolean);
+    if (paths.length === 0) return { error: null };
+    const response = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .remove(paths);
+    if (response.error) {
+      console.error(response.error);
+    }
+    return response;
+  },
+
+  // Deletes the question row and, on success, best-effort removes its images
+  // from storage (an orphan file is harmless; a broken record is not).
+  deleteQuestions: async (question) => {
     try {
       const response = await supabase
         .from("questions")
         .delete()
-        .eq("id", questionId);
+        .eq("id", question.id);
       if (response.status === 204) {
         toast.success("Registro eliminado correctamente");
+        const cleanup = await Questions.removeQuestionImages(question);
+        if (cleanup.error) {
+          toast.warn(
+            "La pregunta se eliminó, pero no se pudieron borrar sus imágenes."
+          );
+        }
       } else {
         toast.error("Error al eliminar el registro");
       }
@@ -72,6 +117,20 @@ const Questions = {
     } catch (error) {
       console.error(error);
     }
+  },
+
+  // Removes a single previously uploaded image from the bucket (used when the
+  // user replaces an image in an edit). Best effort; returns storage response.
+  removeImage: async (publicUrl) => {
+    const path = storagePathFromPublicUrl(publicUrl);
+    if (!path) return { error: null };
+    const response = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .remove([path]);
+    if (response.error) {
+      console.error(response.error);
+    }
+    return response;
   },
 
   // Uploads an option image to the public bucket and returns its public URL.
