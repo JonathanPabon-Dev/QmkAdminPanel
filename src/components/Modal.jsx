@@ -12,6 +12,7 @@ const Modal = ({
   optionsList = [],
   onFieldChange = null,
   onFileChange = null,
+  onRemoveFile = null,
   validateForm = null,
 }) => {
   const [formValues, setFormValues] = useState({});
@@ -93,6 +94,13 @@ const Modal = ({
     });
   };
 
+  const handleRemoveFile = (name, value) => {
+    if (errorMessage) setErrorMessage("");
+    setFormValues((prevValues) => ({ ...prevValues, [name]: "" }));
+    // La página decide qué hacer con el archivo (borrarlo al guardar).
+    if (onRemoveFile) onRemoveFile(name, value);
+  };
+
   if (!isOpen) return null;
   return (
     <div
@@ -126,6 +134,7 @@ const Modal = ({
                   onChange={handleInputChange}
                   optionsList={optionsList}
                   disabled={field.disabled}
+                  onRemoveFile={onRemoveFile ? handleRemoveFile : null}
                 />
               ))}
             </div>
@@ -176,6 +185,7 @@ Modal.propTypes = {
   ),
   onFieldChange: PropTypes.func,
   onFileChange: PropTypes.func,
+  onRemoveFile: PropTypes.func,
   validateForm: PropTypes.func,
 };
 

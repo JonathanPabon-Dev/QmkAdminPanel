@@ -24,6 +24,7 @@ const FormField = ({
   onChange,
   optionsList = [],
   disabled = false,
+  onRemoveFile = null,
 }) => {
   const colSpanClass = colSpanClasses[field.colSpan] ?? "";
   const colStartClass = colStartClasses[field.colStart] ?? "";
@@ -79,11 +80,22 @@ const FormField = ({
             className={inputClass}
           />
           {typeof value === "string" && value !== "" && (
-            <img
-              src={value}
-              alt={field.label}
-              className="mt-2 max-h-24 rounded border border-gray-300 dark:border-gray-600"
-            />
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <img
+                src={value}
+                alt={field.label}
+                className="max-h-24 rounded border border-gray-300 dark:border-gray-600"
+              />
+              <button
+                type="button"
+                title="Quitar imagen"
+                aria-label={`Quitar imagen de ${field.label}`}
+                onClick={() => onRemoveFile && onRemoveFile(field.name, value)}
+                className="size-8 shrink-0 rounded-lg border-2 border-red-400 text-red-400 hover:bg-red-400 hover:text-white"
+              >
+                <i className="fa fa-trash" />
+              </button>
+            </div>
           )}
         </>
       ) : (
@@ -133,6 +145,7 @@ FormField.propTypes = {
     }),
   ),
   disabled: PropTypes.bool,
+  onRemoveFile: PropTypes.func,
 };
 
 export default FormField;

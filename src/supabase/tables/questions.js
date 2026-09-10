@@ -119,18 +119,26 @@ const Questions = {
     }
   },
 
-  // Removes a single previously uploaded image from the bucket (used when the
-  // user replaces an image in an edit). Best effort; returns storage response.
-  removeImage: async (publicUrl) => {
-    const path = storagePathFromPublicUrl(publicUrl);
-    if (!path) return { error: null };
+  // Removes several previously uploaded images from the bucket. Best effort;
+  // returns the storage response so callers can surface a cleanup failure.
+  removeImages: async (publicUrls) => {
+    const paths = (publicUrls || [])
+      .map((url) => storagePathFromPublicUrl(url))
+      .filter(Boolean);
+    if (paths.length === 0) return { error: null };
     const response = await supabase.storage
       .from(IMAGE_BUCKET)
-      .remove([path]);
+      .remove(paths);
     if (response.error) {
       console.error(response.error);
     }
     return response;
+  },
+
+  // Removes a single previously uploaded image from the bucket (used when the
+  // user replaces an image in an edit). Best effort; returns storage response.
+  removeImage: async (publicUrl) => {
+    return Questions.removeImages(publicUrl ? [publicUrl] : []);
   },
 
   // Uploads an option image to the public bucket and returns its public URL.

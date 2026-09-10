@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import Questions from "../supabase/tables/questions";
 import { questionsFields } from "../models/fields";
 import Table from "../components/Table";
@@ -39,6 +39,9 @@ const QuestionsPage = () => {
   const [fields, setFields] = useState(questionsFields);
   const [questionId, setQuestionId] = useState(null);
   const [filterValue, setFilterValue] = useState("");
+  // URLs de imágenes quitadas en el modal; se borran del bucket SÓLO cuando
+  // el guardado llega a buen fin (si se cancela, la DB aún las referencia).
+  const pendingRemovalsRef = useRef(new Set());
 
   function resetStates() {
     setQuestions([]);
@@ -64,11 +67,13 @@ const QuestionsPage = () => {
   }, []);
 
   const handleNew = () => {
+    pendingRemovalsRef.current = new Set();
     setModalMode("insert");
     setModalOpen(true);
   };
 
   const handleEdit = async (id) => {
+    pendingRemovalsRef.current = new Set();
     setModalMode("edit");
     setModalOpen(true);
     setQuestionId(id);
@@ -105,14 +110,31 @@ const QuestionsPage = () => {
   };
 
   const handleModalSubmit = async (form) => {
+    let response;
     switch (modalMode) {
       case "insert":
-        await Questions.createQuestions(form);
+        response = await Questions.createQuestions(form);
         break;
       case "edit":
-        await Questions.updateQuestions(form, questionId);
+        response = await Questions.updateQuestions(form, questionId);
         break;
     }
+
+    // Sólo un guardado confirmado autoriza el borrado físico de las imágenes
+    // quitadas; si la fila no cambió, la DB aún las referencia.
+    const expectedStatus = modalMode === "insert" ? 201 : 204;
+    if (response && response.status === expectedStatus) {
+      const removed = Array.from(pendingRemovalsRef.current);
+      if (removed.length > 0) {
+        const cleanup = await Questions.removeImages(removed);
+        if (cleanup.error) {
+          toast.warn(
+            "La pregunta se guardó, pero no se pudieron borrar las imágenes quitadas."
+          );
+        }
+      }
+    }
+    pendingRemovalsRef.current = new Set();
 
     resetStates();
     await fetchData();
@@ -156,6 +178,13 @@ const QuestionsPage = () => {
       }
     }
     return result;
+  };
+
+  // Registra la imagen quitada; el borrado físico queda pendiente del guardado.
+  const handleRemoveFile = (name, value) => {
+    if (value && typeof value === "string") {
+      pendingRemovalsRef.current.add(value);
+    }
   };
 
   useEffect(() => {
@@ -268,6 +297,7 @@ const QuestionsPage = () => {
         onSubmit={handleModalSubmit}
         optionsList={[{ name: "correct_option", options: correctOptionsList }]}
         onFileChange={handleFileChange}
+        onRemoveFile={handleRemoveFile}
         validateForm={validateQuestionForm}
       />
     </>
