@@ -3,13 +3,14 @@ import { toast } from "react-toastify";
 import { supabase } from "../supabase/client";
 import Loader from "../components/Loader";
 
-const LoginPage = () => {
+const LoginPage = ({ onStudentAccess }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const cancelledRef = useRef(false);
 
   useEffect(() => {
+    cancelledRef.current = false;
     return () => {
       cancelledRef.current = true;
     };
@@ -153,6 +154,14 @@ const LoginPage = () => {
         >
           <i className="fa-brands fa-google text-base" />
           Continuar con Google
+        </button>
+
+        <button
+          type="button"
+          onClick={onStudentAccess}
+          className="mt-4 w-full text-center text-xs font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+        >
+          ¿Eres estudiante? Gestiona tu contraseña
         </button>
       </div>
     </div>

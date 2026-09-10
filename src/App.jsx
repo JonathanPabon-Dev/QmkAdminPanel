@@ -4,6 +4,7 @@ import { tables } from "./models/tables";
 import { supabase } from "./supabase/client";
 import LoginPage from "./pages/LoginPage";
 import InvitePage from "./pages/InvitePage";
+import StudentPasswordPortal from "./pages/StudentPasswordPortal";
 import Loader from "./components/Loader";
 
 const THEME_STORAGE_KEY = "qmk-theme";
@@ -28,6 +29,7 @@ const App = () => {
   const [inviteMode, setInviteMode] = useState(() =>
     window.location.hash.includes("type=invite"),
   );
+  const [portalView, setPortalView] = useState("admin"); // admin | student
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -63,6 +65,15 @@ const App = () => {
     tables.find((table) => table.name === selectedTable) ?? tables[0];
   const PageComponent = selected.component;
 
+  if (portalView === "student") {
+    return (
+      <>
+        <StudentPasswordPortal onExit={() => setPortalView("admin")} />
+        <ToastContainer theme={isDark ? "dark" : "light"} />
+      </>
+    );
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
@@ -74,7 +85,7 @@ const App = () => {
   if (!session) {
     return (
       <>
-        <LoginPage />
+        <LoginPage onStudentAccess={() => setPortalView("student")} />
         <ToastContainer theme={isDark ? "dark" : "light"} />
       </>
     );

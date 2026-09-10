@@ -10,6 +10,7 @@ const InvitePage = ({ onComplete }) => {
   const cancelledRef = useRef(false);
 
   useEffect(() => {
+    cancelledRef.current = false;
     return () => {
       cancelledRef.current = true;
     };
