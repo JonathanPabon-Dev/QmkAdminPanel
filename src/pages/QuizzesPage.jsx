@@ -9,9 +9,15 @@ import Loader from "../components/Loader";
 import FormField from "../components/FormField";
 import Swal from "sweetalert2";
 
-// question_id es texto: orden alfabético ascendente.
+// id es texto (quizzes y questions): orden alfabético ascendente.
 const sortByIdAsc = (list) =>
   [...list].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+
+// course_id es texto: orden alfabético ascendente.
+const sortByCourseIdAsc = (list) =>
+  [...list].sort((a, b) =>
+    String(a.course_id).localeCompare(String(b.course_id)),
+  );
 
 const QuizzesPage = () => {
   const [quizzes, setQuizzes] = useState([]);
@@ -48,12 +54,14 @@ const QuizzesPage = () => {
       setLoading(true);
       const response = await Quizzes.getQuizzes();
       // Agrega un campo de solo lectura con los cursos asociados, p.ej. "10-1, 10-2".
-      const data = (response.data ?? []).map((quiz) => ({
-        ...quiz,
-        courses_display: (quiz.quiz_courses ?? [])
-          .map((relation) => relation.course_id)
-          .join(", "),
-      }));
+      const data = sortByIdAsc(
+        (response.data ?? []).map((quiz) => ({
+          ...quiz,
+          courses_display: (quiz.quiz_courses ?? [])
+            .map((relation) => relation.course_id)
+            .join(", "),
+        })),
+      );
       setQuizzes(data);
       setLoading(false);
     } catch (error) {
@@ -163,13 +171,15 @@ const QuizzesPage = () => {
     });
     // El curso y su ventana de disponibilidad no viven en quizzes: viven en
     // quiz_courses (uno por curso con su ventana propia).
-    const associated = (quiz.quiz_courses ?? []).map((relation) => ({
-      course_id: relation.course_id,
-      available_since: relation.available_since ?? "",
-      available_until: relation.available_until ?? "",
-      available_since_time: relation.available_since_time ?? "",
-      available_until_time: relation.available_until_time ?? "",
-    }));
+    const associated = sortByCourseIdAsc(
+      (quiz.quiz_courses ?? []).map((relation) => ({
+        course_id: relation.course_id,
+        available_since: relation.available_since ?? "",
+        available_until: relation.available_until ?? "",
+        available_since_time: relation.available_since_time ?? "",
+        available_until_time: relation.available_until_time ?? "",
+      })),
+    );
     const courses = await loadCourses();
     const associatedIds = new Set(associated.map((c) => c.course_id));
     setAssociatedCourses(associated);
@@ -198,13 +208,15 @@ const QuizzesPage = () => {
     quizzesFields.forEach((field) => {
       values[field.name] = quiz[field.name];
     });
-    const associated = (quiz.quiz_courses ?? []).map((relation) => ({
-      course_id: relation.course_id,
-      available_since: relation.available_since ?? "",
-      available_until: relation.available_until ?? "",
-      available_since_time: relation.available_since_time ?? "",
-      available_until_time: relation.available_until_time ?? "",
-    }));
+    const associated = sortByCourseIdAsc(
+      (quiz.quiz_courses ?? []).map((relation) => ({
+        course_id: relation.course_id,
+        available_since: relation.available_since ?? "",
+        available_until: relation.available_until ?? "",
+        available_since_time: relation.available_since_time ?? "",
+        available_until_time: relation.available_until_time ?? "",
+      })),
+    );
     const courses = await loadCourses();
     const associatedIds = new Set(associated.map((c) => c.course_id));
     setAssociatedCourses(associated);
@@ -248,16 +260,18 @@ const QuizzesPage = () => {
     if (!selectedCourse) return;
     const course = availableCourses.find((c) => c.id === selectedCourse);
     if (!course) return;
-    setAssociatedCourses((prev) => [
-      ...prev,
-      {
-        course_id: course.id,
-        available_since: "",
-        available_until: "",
-        available_since_time: "",
-        available_until_time: "",
-      },
-    ]);
+    setAssociatedCourses((prev) =>
+      sortByCourseIdAsc([
+        ...prev,
+        {
+          course_id: course.id,
+          available_since: "",
+          available_until: "",
+          available_since_time: "",
+          available_until_time: "",
+        },
+      ]),
+    );
     setAvailableCourses((prev) =>
       prev.filter((c) => c.id !== course.id),
     );
