@@ -1,6 +1,18 @@
 import { supabase } from "../client";
 import { toast } from "react-toastify";
 
+// El formulario envía "" cuando el campo opcional Duration (segundos) queda
+// vacío. duration_seconds es integer en Postgres, y PostgREST falla con
+// 22P02 al intentar castear "" a integer; el contrato espera null (sin
+// límite de tiempo). Se normaliza aquí, en el límite con la API.
+const normalizeQuizPayload = (quiz) => {
+  const payload = { ...quiz };
+  if (payload.duration_seconds === "") {
+    payload.duration_seconds = null;
+  }
+  return payload;
+};
+
 const Quizzes = {
   getQuizzes: async () => {
     try {
@@ -26,7 +38,9 @@ const Quizzes = {
 
   createQuizzes: async (quiz) => {
     try {
-      const response = await supabase.from("quizzes").insert({ ...quiz });
+      const response = await supabase
+        .from("quizzes")
+        .insert(normalizeQuizPayload(quiz));
       if (response.status === 201) {
         toast.success("Registro creado correctamente");
       } else {
@@ -42,7 +56,7 @@ const Quizzes = {
     try {
       const response = await supabase
         .from("quizzes")
-        .update({ ...quiz })
+        .update(normalizeQuizPayload(quiz))
         .eq("id", quizId);
       if (response.status === 204) {
         toast.success("Registro actualizado correctamente");
