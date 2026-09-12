@@ -1,9 +1,30 @@
+import { useEffect } from "react";
 import PropTypes from "prop-types";
 
 // Modal informativo de solo lectura para una pregunta: NO renderiza inputs,
 // presenta el texto y las imágenes (pregunta + 4 opciones), sin revelar cuál
 // es la opción correcta.
 const QuestionViewModal = ({ question, isOpen, onClose }) => {
+  // Mientras la modal está abierta bloquea el scroll del contenido de atrás.
+  useEffect(() => {
+    if (!isOpen || !question) return undefined;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen, question]);
+
+  // Cierra con la tecla Escape.
+  useEffect(() => {
+    if (!isOpen || !question) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, question, onClose]);
+
   if (!isOpen || !question) return null;
 
   const options = [1, 2, 3, 4].map((n) => ({
@@ -15,9 +36,13 @@ const QuestionViewModal = ({ question, isOpen, onClose }) => {
   return (
     <div
       tabIndex="-1"
-      className="fixed left-0 right-0 top-0 z-50 flex h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-80 p-4 md:inset-0"
+      onClick={onClose}
+      className="fixed left-0 right-0 top-0 z-50 flex h-full max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-85 backdrop-blur-sm p-4 md:inset-0"
     >
-      <div className="max-h-full w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl dark:bg-gray-800">
+      <div
+        onClick={(event) => event.stopPropagation()}
+        className="max-h-full w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-xl dark:bg-gray-800"
+      >
         <div className="flex items-center justify-between rounded-t border-b p-4 dark:border-gray-600 md:p-5">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
             {question.id}
