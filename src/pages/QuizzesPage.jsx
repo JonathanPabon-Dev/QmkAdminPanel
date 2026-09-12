@@ -468,6 +468,7 @@ const QuizzesPage = () => {
             </h2>
             <form
               onSubmit={handleSave}
+              autoComplete="off"
               className="flex w-full max-w-4xl flex-col gap-4 rounded-xl bg-white p-4 shadow-md dark:bg-gray-800"
             >
               <ol className="flex flex-wrap items-center gap-2">
@@ -551,6 +552,7 @@ const QuizzesPage = () => {
                       value={selectedCourse}
                       onChange={(e) => setSelectedCourse(e.target.value)}
                       disabled={isReadOnly}
+                      autoComplete="off"
                       className="w-full rounded-md border-2 border-slate-500 bg-white p-2 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       <option value="">
@@ -624,6 +626,7 @@ const QuizzesPage = () => {
                                     )
                                   }
                                   disabled={isReadOnly}
+                                  autoComplete="off"
                                   className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 />
                               </td>
@@ -640,6 +643,7 @@ const QuizzesPage = () => {
                                     )
                                   }
                                   disabled={isReadOnly}
+                                  autoComplete="off"
                                   className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 />
                               </td>
@@ -656,6 +660,7 @@ const QuizzesPage = () => {
                                     )
                                   }
                                   disabled={isReadOnly}
+                                  autoComplete="off"
                                   className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 />
                               </td>
@@ -672,6 +677,7 @@ const QuizzesPage = () => {
                                     )
                                   }
                                   disabled={isReadOnly}
+                                  autoComplete="off"
                                   className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 />
                               </td>
@@ -777,6 +783,7 @@ const QuizzesPage = () => {
                             placeholder="Buscar por ID o texto ..."
                             value={availableSearch}
                             onChange={(e) => setAvailableSearch(e.target.value)}
+                            autoComplete="off"
                             className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
                           />
                           {filteredAvailable.length > 0 ? (
@@ -884,6 +891,7 @@ const QuizzesPage = () => {
                 placeholder="Buscar prueba/quiz ..."
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
+                autoComplete="off"
                 className="w-full rounded-md border-2 border-slate-500 p-2 outline-none dark:bg-slate-800 dark:text-slate-100"
               />
             </div>

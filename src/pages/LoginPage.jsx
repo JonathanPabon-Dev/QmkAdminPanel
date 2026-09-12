@@ -75,7 +75,11 @@ const LoginPage = ({ onStudentAccess }) => {
           Inicia sesión para continuar
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="mt-6 flex flex-col gap-4"
+      >
           <div>
             <label
               htmlFor="login-email"
@@ -90,7 +94,7 @@ const LoginPage = ({ onStudentAccess }) => {
               <input
                 id="login-email"
                 type="email"
-                autoComplete="email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="correo@ejemplo.com"
@@ -113,7 +117,7 @@ const LoginPage = ({ onStudentAccess }) => {
               <input
                 id="login-password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="off"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"

@@ -139,7 +139,11 @@ const StudentPasswordPortal = ({ onExit }) => {
             Ingresa para gestionar tu contraseña
           </p>
 
-          <form onSubmit={handleLogin} className="mt-6 flex flex-col gap-4">
+          <form
+          onSubmit={handleLogin}
+          autoComplete="off"
+          className="mt-6 flex flex-col gap-4"
+        >
             <div>
               <label
                 htmlFor="student-code"
@@ -151,7 +155,7 @@ const StudentPasswordPortal = ({ onExit }) => {
                 id="student-code"
                 type="text"
                 inputMode="numeric"
-                autoComplete="username"
+                autoComplete="off"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="Tu código de estudiante"
@@ -169,7 +173,7 @@ const StudentPasswordPortal = ({ onExit }) => {
               <input
                 id="student-password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="off"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -219,6 +223,7 @@ const StudentPasswordPortal = ({ onExit }) => {
 
         <form
           onSubmit={handleChangePassword}
+          autoComplete="off"
           className="mt-6 flex flex-col gap-4"
         >
           {!mustChange && (
@@ -232,7 +237,7 @@ const StudentPasswordPortal = ({ onExit }) => {
               <input
                 id="change-current"
                 type="password"
-                autoComplete="current-password"
+                autoComplete="off"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="••••••••"
@@ -251,7 +256,7 @@ const StudentPasswordPortal = ({ onExit }) => {
             <input
               id="change-new"
               type="password"
-              autoComplete="new-password"
+              autoComplete="off"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
@@ -269,7 +274,7 @@ const StudentPasswordPortal = ({ onExit }) => {
             <input
               id="change-confirm"
               type="password"
-              autoComplete="new-password"
+              autoComplete="off"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repite la nueva contraseña"

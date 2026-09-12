@@ -62,7 +62,11 @@ const InvitePage = ({ onComplete }) => {
           Establece tu contraseña para completar el acceso
         </p>
 
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="mt-6 flex flex-col gap-4"
+      >
           <div>
             <label
               htmlFor="invite-password"
@@ -73,7 +77,7 @@ const InvitePage = ({ onComplete }) => {
             <input
               id="invite-password"
               type="password"
-              autoComplete="new-password"
+              autoComplete="off"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
@@ -91,7 +95,7 @@ const InvitePage = ({ onComplete }) => {
             <input
               id="invite-confirm"
               type="password"
-              autoComplete="new-password"
+              autoComplete="off"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Repite la contraseña"

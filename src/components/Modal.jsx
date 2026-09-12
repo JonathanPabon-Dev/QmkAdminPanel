@@ -124,7 +124,11 @@ const Modal = ({
               <i className="fa fa-close" />
             </button>
           </div>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+          <form
+            onSubmit={handleSubmit}
+            autoComplete="off"
+            className="flex flex-col gap-4 p-4"
+          >
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {fields.map((field) => (
                 <FormField
