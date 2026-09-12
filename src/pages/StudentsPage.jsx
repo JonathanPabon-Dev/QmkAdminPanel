@@ -226,8 +226,7 @@ const StudentsPage = () => {
           <Loader className={"size-10"} />
         ) : (
           <>
-            <div className="flex w-full items-center justify-between">
-              <h2 className="text-xl font-bold uppercase dark:text-slate-100">Estudiantes</h2>
+            <div className="flex w-full items-center justify-end">
               <button
                 type="button"
                 className="size-8 rounded-lg border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white"
