@@ -81,7 +81,7 @@ const FormField = ({
             disabled={disabled}
             className={inputClass}
           />
-          {typeof value === "string" && value !== "" && (
+          {typeof value === "string" && value !== "" && !disabled && (
             <div className="mt-2 flex items-end justify-between gap-2">
               <img
                 src={value}

@@ -4,6 +4,7 @@ import { questionsFields } from "../models/fields";
 import Table from "../components/Table";
 import Loader from "../components/Loader";
 import Modal from "../components/Modal";
+import QuestionViewModal from "../components/QuestionViewModal";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 
@@ -14,12 +15,16 @@ const correctOptionsList = [
   { value: "4", text: "4" },
 ];
 
-// Renders the field text and, when present, its thumbnail below it.
-// The image column name derives from the field (question_image_url,
-// option_1_image_url...).
+// Renders the field text (clamped to 2 lines; title muestra el texto completo
+// al hacer hover) and, when present, its thumbnail below it.
 const makeTextWithImageRenderer = (imageKey, altText) => (text, row) => (
-  <>
-    {text}
+  <div className="min-w-0">
+    <div
+      title={text}
+      className="line-clamp-2 max-w-xs overflow-hidden"
+    >
+      {text}
+    </div>
     {row[imageKey] && (
       <img
         src={row[imageKey]}
@@ -27,8 +32,16 @@ const makeTextWithImageRenderer = (imageKey, altText) => (text, row) => (
         className="mt-1 max-h-16 rounded border border-gray-300 dark:border-gray-600"
       />
     )}
-  </>
+  </div>
 );
+
+// Carga la pregunta completa desde la DB. Devuelve null ante error (incluido
+// response undefined por un throw interno) o ausencia de fila; nunca lanza.
+const fetchQuestion = async (id) => {
+  const response = await Questions.getQuestionById(id);
+  if (!response || response.error || !response.data?.[0]) return null;
+  return response.data[0];
+};
 
 const QuestionsPage = () => {
   const [questions, setQuestions] = useState([]);
@@ -39,6 +52,8 @@ const QuestionsPage = () => {
   const [fields, setFields] = useState(questionsFields);
   const [questionId, setQuestionId] = useState(null);
   const [filterValue, setFilterValue] = useState("");
+  // Pregunta completa abierta en el modal informativo de solo lectura.
+  const [viewingQuestion, setViewingQuestion] = useState(null);
   // URLs de imágenes quitadas en el modal; se borran del bucket SÓLO cuando
   // el guardado llega a buen fin (si se cancela, la DB aún las referencia).
   const pendingRemovalsRef = useRef(new Set());
@@ -51,6 +66,7 @@ const QuestionsPage = () => {
     setFields(questionsFields);
     setQuestionId(null);
     setFilterValue("");
+    setViewingQuestion(null);
   }
 
   const fetchData = useCallback(async () => {
@@ -74,18 +90,33 @@ const QuestionsPage = () => {
 
   const handleEdit = async (id) => {
     pendingRemovalsRef.current = new Set();
+    // 1) Cargar y validar ANTES de abrir la modal: si la pregunta no existe o
+    //    la petición falla (response undefined o error), no se abre nada y no
+    //    se tocan los fields (evita referencia nula al asignarlos).
+    const question = await fetchQuestion(id);
+    if (!question) {
+      console.error(`Pregunta ${id} no encontrada o error de carga`);
+      return;
+    }
+    // 2) Clon PROFUNDO desde questionsFields (constante pristina): objetos
+    //    nuevos por campo, sin mutar el arreglo compartido entre modales.
+    setFields(
+      questionsFields.map((field) => ({
+        ...field,
+        value: question[field.name] ?? "",
+      })),
+    );
     setModalMode("edit");
     setModalOpen(true);
     setQuestionId(id);
+  };
 
-    const response = await Questions.getQuestionById(id);
-    const question = response.data[0];
-
-    const fieldsTmp = [...fields];
-    fieldsTmp.forEach((field) => {
-      field.value = question[field.name];
-    });
-    setFields(fieldsTmp);
+  // Vista informativa: abre el modal de solo lectura con la pregunta completa
+  // (texto + imágenes), sin campos de formulario.
+  const handleView = async (id) => {
+    const question = await fetchQuestion(id);
+    if (!question) return;
+    setViewingQuestion(question);
   };
 
   const handleDelete = async (id) => {
@@ -101,8 +132,7 @@ const QuestionsPage = () => {
       if (result.isConfirmed) {
         // Se borra la pregunta completa (no solo el id) para que la limpieza
         // de imágenes del bucket pueda extraer las URLs desde el registro.
-        const response = await Questions.getQuestionById(id);
-        const question = response.data ? response.data[0] : null;
+        const question = await fetchQuestion(id);
         await Questions.deleteQuestions(question || { id });
         await fetchData();
       }
@@ -276,6 +306,7 @@ const QuestionsPage = () => {
                       "Opción 4"
                     ),
                   }}
+                  onHandleView={handleView}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
                 />
@@ -298,6 +329,11 @@ const QuestionsPage = () => {
         onFileChange={handleFileChange}
         onRemoveFile={handleRemoveFile}
         validateForm={validateQuestionForm}
+      />
+      <QuestionViewModal
+        question={viewingQuestion}
+        isOpen={!!viewingQuestion}
+        onClose={() => setViewingQuestion(null)}
       />
     </>
   );
