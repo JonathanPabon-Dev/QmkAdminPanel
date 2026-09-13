@@ -113,6 +113,18 @@ const Students = {
       return { ok: false, code: "INTERNAL" };
     }
   },
+
+  // PR4: rol del usuario autenticado ('admin' | 'teacher' | 'student' | null).
+  // La RPC es security definer y solo admite sesiones autenticadas; data null
+  // significa que la cuenta no tiene fila en user_roles (no admin).
+  getMyRole: async () => {
+    try {
+      return await supabase.rpc("get_my_role");
+    } catch (error) {
+      console.error(error);
+      return { error };
+    }
+  },
 };
 
 export default Students;

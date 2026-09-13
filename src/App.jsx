@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { tables } from "./models/tables";
 import { supabase } from "./supabase/client";
+import Students from "./supabase/tables/students";
 import LoginPage from "./pages/LoginPage";
 import InvitePage, { INVITE_TOKEN_STORAGE_KEY } from "./pages/InvitePage";
 import StudentPasswordPortal from "./pages/StudentPasswordPortal";
@@ -21,6 +22,43 @@ const getInitialTheme = () => {
     : "light";
 };
 
+// PR4: vista minima para sesiones autenticadas cuyo rol no es admin (teacher,
+// student o cuenta sin fila en user_roles). No renderiza ninguna tabla del
+// panel; el acceso al portal de estudiantes queda disponible. El cierre de
+// sesion permite cambiar a una cuenta con permisos.
+const RestrictedView = ({ email, onStudentAccess, onLogout, isDark }) => (
+  <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 dark:bg-slate-900">
+    <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <i className="fa fa-user-shield text-4xl text-slate-400" />
+      <h1 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">
+        Acceso restringido
+      </h1>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        Tu cuenta no tiene permisos de administrador en el panel.
+      </p>
+      <p className="mt-3 truncate text-xs text-slate-400 dark:text-slate-500">
+        {email}
+      </p>
+      <button
+        type="button"
+        onClick={onStudentAccess}
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+      >
+        <i className="fa fa-graduation-cap" />
+        Entrar al portal de estudiantes
+      </button>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="mt-4 w-full text-center text-xs font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+      >
+        Cerrar sesión
+      </button>
+    </div>
+    <ToastContainer theme={isDark ? "dark" : "light"} />
+  </div>
+);
+
 const App = () => {
   const [selectedTable, setSelectedTable] = useState(tables[0].name);
   const [theme, setTheme] = useState(getInitialTheme);
@@ -34,6 +72,11 @@ const App = () => {
       localStorage.getItem(INVITE_TOKEN_STORAGE_KEY) !== null,
   );
   const [portalView, setPortalView] = useState("admin"); // admin | student
+  // PR4: rol de la sesion actual. roleState guarda junto al rol el uid para el
+  // que fue consultado: un rol viejo de otra sesion nunca se aplica a la
+  // sesion nueva (se trata como pendiente hasta volver a consultar).
+  const [roleState, setRoleState] = useState({ uid: null, role: null, status: "idle" });
+  const [roleRetry, setRoleRetry] = useState(0);
   const isDark = theme === "dark";
 
   useEffect(() => {
@@ -55,6 +98,31 @@ const App = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // PR4: consulta get_my_role una vez por sesion (uid) y solo fuera del flujo
+  // de invitacion. Ningun setState es sincrono dentro del efecto: mientras el
+  // rol no sea "ready"/"error" para la sesion actual, el render muestra el
+  // loader y jamas concede el panel.
+  const sessionUid = session?.user?.id ?? null;
+  useEffect(() => {
+    if (inviteMode || sessionUid === null) return;
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await Students.getMyRole();
+      if (cancelled) return;
+      if (error) {
+        setRoleState({ uid: sessionUid, role: null, status: "error" });
+        return;
+      }
+      // data null = cuenta sin rol en user_roles -> vista restringida.
+      setRoleState({ uid: sessionUid, role: data, status: "ready" });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionUid, inviteMode, roleRetry]);
 
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
@@ -113,6 +181,66 @@ const App = () => {
         <LoginPage onStudentAccess={() => setPortalView("student")} />
         <ToastContainer theme={isDark ? "dark" : "light"} />
       </>
+    );
+  }
+
+  // PR4: el panel solo se renderiza con rol "admin" de la sesion actual.
+  // Mientras el rol no se conoce (aun no consultado o de otra sesion) se
+  // muestra el loader; si la consulta falla se muestra error con reintento.
+  // Ningun camino concede el panel sin un rol admin confirmado.
+  const roleForSession =
+    roleState.uid === sessionUid
+      ? roleState
+      : { uid: sessionUid, role: null, status: "idle" };
+
+  if (roleForSession.status !== "ready" && roleForSession.status !== "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
+        <Loader className="mx-auto" />
+      </div>
+    );
+  }
+
+  if (roleForSession.status === "error") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 dark:bg-slate-900">
+        <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+            No se pudo verificar tu rol
+          </h1>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+            Ocurrió un error al consultar tus permisos de acceso. Intenta de
+            nuevo o cierra la sesión.
+          </p>
+          <button
+            type="button"
+            onClick={() => setRoleRetry((n) => n + 1)}
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800"
+          >
+            <i className="fa fa-rotate-right" />
+            Reintentar
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="mt-4 w-full text-center text-xs font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+        <ToastContainer theme={isDark ? "dark" : "light"} />
+      </div>
+    );
+  }
+
+  if (roleForSession.role !== "admin") {
+    return (
+      <RestrictedView
+        email={session.user.email}
+        onStudentAccess={() => setPortalView("student")}
+        onLogout={handleLogout}
+        isDark={isDark}
+      />
     );
   }
 
