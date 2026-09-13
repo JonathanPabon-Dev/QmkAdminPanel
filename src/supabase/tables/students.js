@@ -73,6 +73,46 @@ const Students = {
       console.error(error);
     }
   },
+
+  // PR3: registro del correo del estudiante (prueba la contrasena actual,
+  // guarda el email y devuelve el proof de un solo uso). Los rechazos llegan
+  // como { ok: false, reason } en data; la RPC no lanza para errores de negocio.
+  registerStudentEmail: async ({ code, currentPassword, email }) => {
+    try {
+      return await supabase.rpc("register_student_email", {
+        p_code: code,
+        p_current_password: currentPassword,
+        p_email: email,
+      });
+    } catch (error) {
+      console.error(error);
+      return { error };
+    }
+  },
+
+  // PR3: envio del correo de invitacion via la edge function send-student-invite.
+  // La funcion corre con verify_jwt deshabilitado: la cabecera apikey con la
+  // key anonima alcanza (el proof de un solo uso es la puerta real). Incluye la
+  // misma prefiltracion CORS que la RPC del portal: * + apikey/content-type.
+  sendStudentInvite: async ({ proof }) => {
+    try {
+      const response = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/send-student-invite`,
+        {
+          method: "POST",
+          headers: {
+            apikey: supabase.supabaseKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ proof }),
+        },
+      );
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      return { ok: false, code: "INTERNAL" };
+    }
+  },
 };
 
 export default Students;
