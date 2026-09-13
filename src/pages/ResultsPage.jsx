@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import Results from "../supabase/tables/results";
 import Courses from "../supabase/tables/courses";
 import Loader from "../components/Loader";
@@ -137,6 +138,53 @@ const ResultsPage = () => {
     setDetailQuiz(null);
     setAnswers([]);
     setAnswersError("");
+  };
+
+  // Elimina el resultado (answers + quiz_results) del estudiante en el quiz.
+  const handleDeleteResult = async () => {
+    const result = await Swal.fire({
+      title: "Eliminar resultado",
+      text: `¿Está seguro de que desea eliminar el resultado de ${detailStudent.student_name} en "${detailQuiz.quiz_topic}"? Esta acción no se puede deshacer.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#009c0d",
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await Results.deleteResult(
+        detailStudent.student_id,
+        detailQuiz.quiz_id,
+      );
+      if (response?.error) {
+        console.error(response.error);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudo eliminar el resultado. Intente nuevamente.",
+        });
+        return;
+      }
+      closeDetail();
+      await fetchData();
+      Swal.fire({
+        icon: "success",
+        title: "Eliminado",
+        text: "El resultado se eliminó correctamente.",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo eliminar el resultado. Intente nuevamente.",
+      });
+    }
   };
 
   // Nota promedio del estudiante (1-10): suma de correctas sobre suma de
@@ -395,14 +443,25 @@ const ResultsPage = () => {
               <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
                 {detailStudent.student_name} — {detailQuiz.quiz_topic}
               </h3>
-              <button
-                type="button"
-                aria-label="Cerrar"
-                onClick={closeDetail}
-                className="ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm font-bold text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
-              >
-                <i className="fa fa-close" />
-              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  title="Eliminar resultado"
+                  onClick={handleDeleteResult}
+                  className="inline-flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-bold text-red-600 transition hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                >
+                  <i className="fa fa-trash" />
+                  Eliminar
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cerrar"
+                  onClick={closeDetail}
+                  className="inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm font-bold text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white"
+                >
+                  <i className="fa fa-close" />
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-col gap-4 p-4 md:p-5">
