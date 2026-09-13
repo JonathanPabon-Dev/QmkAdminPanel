@@ -3,7 +3,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { tables } from "./models/tables";
 import { supabase } from "./supabase/client";
 import LoginPage from "./pages/LoginPage";
-import InvitePage from "./pages/InvitePage";
+import InvitePage, { INVITE_TOKEN_STORAGE_KEY } from "./pages/InvitePage";
 import StudentPasswordPortal from "./pages/StudentPasswordPortal";
 import Loader from "./components/Loader";
 
@@ -26,8 +26,12 @@ const App = () => {
   const [theme, setTheme] = useState(getInitialTheme);
   const [session, setSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [inviteMode, setInviteMode] = useState(() =>
-    window.location.hash.includes("type=invite"),
+  const [inviteMode, setInviteMode] = useState(
+    () =>
+      // Hash del enlace del correo (#type=invite&invite_token=...) o token
+      // conservado en localStorage durante el redirect de OAuth de Google.
+      window.location.hash.includes("type=invite") ||
+      localStorage.getItem(INVITE_TOKEN_STORAGE_KEY) !== null,
   );
   const [portalView, setPortalView] = useState("admin"); // admin | student
   const isDark = theme === "dark";
@@ -61,6 +65,18 @@ const App = () => {
     toast.success("Sesión cerrada.");
   };
 
+  // Fin del flujo de invitación: limpia el token localStorage y el hash para
+  // que un reload no vuelva a entrar en modo invitación.
+  const handleInviteComplete = () => {
+    localStorage.removeItem(INVITE_TOKEN_STORAGE_KEY);
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
+    setInviteMode(false);
+  };
+
   const selected =
     tables.find((table) => table.name === selectedTable) ?? tables[0];
   const PageComponent = selected.component;
@@ -82,28 +98,19 @@ const App = () => {
     );
   }
 
-  if (!session) {
+  if (inviteMode) {
     return (
       <>
-        <LoginPage onStudentAccess={() => setPortalView("student")} />
+        <InvitePage session={session} onComplete={handleInviteComplete} />
         <ToastContainer theme={isDark ? "dark" : "light"} />
       </>
     );
   }
 
-  if (inviteMode) {
+  if (!session) {
     return (
       <>
-        <InvitePage
-          onComplete={() => {
-            window.history.replaceState(
-              null,
-              "",
-              window.location.pathname + window.location.search,
-            );
-            setInviteMode(false);
-          }}
-        />
+        <LoginPage onStudentAccess={() => setPortalView("student")} />
         <ToastContainer theme={isDark ? "dark" : "light"} />
       </>
     );
