@@ -282,7 +282,7 @@ const ResultsPage = () => {
                           Curso
                         </th>
                         <th scope="col" className="px-6 py-3">
-                          COD
+                          #
                         </th>
                         <th scope="col" className="px-6 py-3">
                           Nombre
