@@ -7,6 +7,31 @@ import Loader from "../components/Loader";
 import Modal from "../components/Modal";
 import Swal from "sweetalert2";
 
+// PR4: estado de vinculacion del correo del estudiante. La vista v_students
+// deriva linked de students.auth_user_id; invite_pending indica una
+// invitacion pendiente de usar (o reenviar desde el portal).
+const LinkStateBadge = ({ linked, invitePending }) => {
+  if (linked) {
+    return (
+      <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900/40 dark:text-green-300">
+        Vinculado
+      </span>
+    );
+  }
+  if (invitePending) {
+    return (
+      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+        Invitación pendiente
+      </span>
+    );
+  }
+  return (
+    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+      Sin correo
+    </span>
+  );
+};
+
 const StudentsPage = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -146,6 +171,28 @@ const StudentsPage = () => {
     await fetchData();
   };
 
+  // PR4: accion de invitacion por fila (estudiantes sin correo). La edge
+  // function send-student-invite no tiene ruta admin (scope PR2: solo proof de
+  // estudiante), asi que el flujo se re-encauza al protocolo de prueba del
+  // portal: el estudiante abre el portal, ingresa su codigo + contrasena
+  // actual y registra su Gmail; ahi mismo se envia la invitacion (pantalla
+  // "Revisa tu correo", PR3b). Se conserva la intencion del diseno (el admin
+  // inicia el flujo de invitacion del estudiante).
+  const handleInvite = (student) => {
+    Swal.fire({
+      title: "Invitar estudiante",
+      html:
+        `El estudiante <strong>${student.code}</strong> (${student.name}) debe ` +
+        "abrir el portal de estudiantes desde la pantalla de inicio " +
+        "(«¿Eres estudiante? Gestiona tu contraseña»), ingresar su código y " +
+        "contraseña actual, y registrar su correo de Gmail. " +
+        "Desde ahí recibirá la invitación para vincular su cuenta con Google.",
+      icon: "info",
+      confirmButtonText: "Entendido",
+      confirmButtonColor: "#2563eb",
+    });
+  };
+
   // Autocompleta el grado (oculto) cuando se selecciona un curso: el id del
   // curso tiene el formato "10-1" (grado-salón), por convención establecida.
   const handleFieldChange = (name, value, values) => {
@@ -245,9 +292,34 @@ const StudentsPage = () => {
                     number_list: "No. Lista",
                     name: "Nombre",
                     grade: "Grado",
+                    email: "Correo",
+                    estado: "Estado",
+                    invitacion: "Invitación",
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
+                  renderers={{
+                    email: (value) => value ?? "—",
+                    estado: (_value, student) => (
+                      <LinkStateBadge
+                        linked={student.linked === true}
+                        invitePending={student.invite_pending === true}
+                      />
+                    ),
+                    invitacion: (_value, student) =>
+                      student.email ? (
+                        "—"
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleInvite(student)}
+                          className="flex items-center gap-1 rounded-md border border-blue-500 px-2 py-1 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white"
+                        >
+                          <i className="fa fa-envelope" />
+                          Invitar
+                        </button>
+                      ),
+                  }}
                 />
               </div>
             ) : (

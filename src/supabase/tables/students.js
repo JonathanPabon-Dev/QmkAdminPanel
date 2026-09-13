@@ -4,7 +4,12 @@ import { toast } from "react-toastify";
 const Students = {
   getStudents: async () => {
     try {
-      const response = await supabase.from("v_students").select();
+      // PR4: la vista v_students incluye email, linked e invite_pending
+      // (columnas agregadas en la migración 20260918); la lista las expone
+      // en la tabla de estudiantes.
+      const response = await supabase
+        .from("v_students")
+        .select("code, number_list, name, grade, email, linked, invite_pending");
       return response;
     } catch (error) {
       console.error(error);
