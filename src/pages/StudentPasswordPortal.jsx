@@ -4,9 +4,9 @@ import { supabase } from "../supabase/client";
 import Students from "../supabase/tables/students";
 import Loader from "../components/Loader";
 
-// Portal temporal de estudiantes: gestion de contrasena, registro del correo
-// de Gmail y reenvio de la invitacion de acceso con Google. Nunca toca la
-// sesion admin.
+// Portal temporal de estudiantes: registro del correo de Gmail, reenvio de
+// la confirmacion y acceso final con Google (codigo + contrasena solo hasta
+// que el correo queda vinculado). Nunca toca la sesion admin.
 
 const maskEmail = (email) => {
   if (!email) return "";
@@ -30,30 +30,28 @@ const registerEmailError = (reason) => {
 
 const sendInviteError = (code) => {
   const messages = {
-    INVALID_PROOF: "La invitación no es válida. Intenta de nuevo.",
-    PROOF_USED: "La invitación ya fue enviada. Revisa tu correo.",
-    INVITE_EXPIRED: "La invitación caducó. Intenta de nuevo.",
+    INVALID_PROOF: "La confirmación no es válida. Intenta de nuevo.",
+    PROOF_USED: "La confirmación ya fue enviada. Revisa tu correo.",
+    INVITE_EXPIRED: "La confirmación caducó. Intenta de nuevo.",
     GMAIL_ONLY: "Solo se admiten correos de Gmail.",
     EMAIL_SEND_FAILED: "No se pudo enviar el correo. Intenta de nuevo.",
   };
   return (
     messages[code] ??
-    "Ocurrió un error al enviar la invitación. Intenta de nuevo."
+    "Ocurrió un error al enviar la confirmación. Intenta de nuevo."
   );
 };
 
 const StudentPasswordPortal = ({ onExit }) => {
-  const [screen, setScreen] = useState("login"); // login | change | gmail | sent
+  const [screen, setScreen] = useState("login"); // login | gmail | sent | googleonly
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
   const [email, setEmail] = useState(null);
   const [linked, setLinked] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const [pending, setPending] = useState(false);
-  const [mustChange, setMustChange] = useState(false);
+  const [busy, setBusy] = useState(false);
   const cancelledRef = useRef(false);
 
   useEffect(() => {
@@ -67,12 +65,9 @@ const StudentPasswordPortal = ({ onExit }) => {
     setCode("");
     setPassword("");
     setCurrentPassword("");
-    setNewPassword("");
-    setConfirm("");
     setEmail(null);
     setLinked(false);
     setEmailInput("");
-    setMustChange(false);
   };
 
   const handleBack = () => {
@@ -106,78 +101,17 @@ const StudentPasswordPortal = ({ onExit }) => {
         // La contraseña digitada queda guardada: es la "actual" mientras el
         // flujo no la cambie, y register_student_email la usa como prueba.
         setCurrentPassword(password);
-        if (data.email) {
+        if (data.google_only) {
+          setScreen("googleonly");
+        } else if (data.email) {
           // Invitación ya enviada (o cuenta ya vinculada): ir directo a
           // "Revisa tu correo" sin forzar otro cambio de contraseña.
           setEmail(data.email);
           setLinked(data.auth_linked === true);
           setScreen("sent");
-        } else if (data.must_change_password) {
-          setMustChange(true);
-          toast.warn(
-            "Debes cambiar tu contraseña antes de continuar. Es obligatorio por seguridad.",
-          );
-          setScreen("change");
         } else {
-          setMustChange(false);
           setScreen("gmail");
         }
-      }
-    } finally {
-      if (!cancelledRef.current) {
-        setPending(false);
-      }
-    }
-  };
-
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-
-    if (!mustChange && !currentPassword) {
-      toast.warn("Ingresa tu contraseña actual.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      toast.warn("La nueva contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
-    if (newPassword === (mustChange ? password : currentPassword)) {
-      toast.warn("La nueva contraseña debe ser diferente a la actual.");
-      return;
-    }
-    if (newPassword !== confirm) {
-      toast.warn("Las contraseñas no coinciden.");
-      return;
-    }
-
-    const numericCode = Number(code.trim());
-
-    setPending(true);
-
-    try {
-      const { data, error } = await supabase.rpc("update_student_password", {
-        p_code: numericCode,
-        p_current_password: mustChange ? password : currentPassword,
-        p_new_password: newPassword,
-      });
-
-      if (!cancelledRef.current && (error || !data)) {
-        toast.error(
-          "No se pudo actualizar la contraseña. Verifica tu contraseña actual.",
-        );
-        return;
-      }
-
-      if (!cancelledRef.current) {
-        toast.success(
-          "Contraseña actualizada. Registra tu correo de Gmail para continuar.",
-        );
-        // La nueva contraseña pasa a ser la "actual" del flujo: la RPC de
-        // registro del correo la vuelve a usar como prueba.
-        setPassword(newPassword);
-        setCurrentPassword(newPassword);
-        setMustChange(false);
-        setScreen(email ? "sent" : "gmail");
       }
     } finally {
       if (!cancelledRef.current) {
@@ -251,11 +185,30 @@ const StudentPasswordPortal = ({ onExit }) => {
     try {
       const sent = await registerAndSend(email);
       if (!cancelledRef.current && sent) {
-        toast.success("Invitación enviada de nuevo.");
+        toast.success("Confirmación enviada de nuevo.");
       }
     } finally {
       if (!cancelledRef.current) {
         setPending(false);
+      }
+    }
+  };
+
+  const handleGoogleOnlyLogin = async () => {
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + import.meta.env.BASE_URL,
+        },
+      });
+      if (!cancelledRef.current && error) {
+        toast.error("No se pudo iniciar sesión con Google. Intenta de nuevo.");
+      }
+    } finally {
+      if (!cancelledRef.current) {
+        setBusy(false);
       }
     }
   };
@@ -350,7 +303,7 @@ const StudentPasswordPortal = ({ onExit }) => {
           </h1>
           <p className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
             Para ingresar al panel con Google, registra el correo de Gmail al
-            que enviaremos la invitación.
+            que enviaremos la confirmación.
           </p>
 
           <form
@@ -386,7 +339,7 @@ const StudentPasswordPortal = ({ onExit }) => {
               ) : (
                 <>
                   <i className="fa fa-envelope" />
-                  Enviar invitación
+                  Enviar confirmación
                 </>
               )}
             </button>
@@ -420,7 +373,7 @@ const StudentPasswordPortal = ({ onExit }) => {
           ) : (
             <>
               <p className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
-                Enviamos una invitación a{" "}
+                Enviamos una confirmación a{" "}
                 <strong className="text-slate-700 dark:text-slate-200">
                   {maskEmail(email)}
                 </strong>
@@ -441,7 +394,7 @@ const StudentPasswordPortal = ({ onExit }) => {
                 ) : (
                   <>
                     <i className="fa fa-paper-plane" />
-                    Reenviar invitación
+                    Reenviar confirmación
                   </>
                 )}
               </button>
@@ -460,103 +413,41 @@ const StudentPasswordPortal = ({ onExit }) => {
     );
   }
 
+  // screen === "googleonly"
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 dark:bg-slate-900">
       <div className="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-8 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <h1 className="text-center text-xl font-bold text-slate-900 dark:text-white">
-          {mustChange
-            ? "Cambio de contraseña obligatorio"
-            : "Cambiar contraseña"}
+          Acceso con Google
         </h1>
         <p className="mt-1 text-center text-sm text-slate-500 dark:text-slate-400">
-          {mustChange
-            ? "Por seguridad, define una contraseña personal antes de continuar."
-            : "Puedes actualizar tu contraseña cuando quieras."}
+          Tu cuenta ya está vinculada con Google. La contraseña de tu código
+          quedó deshabilitada; ahora el acceso es solo con la cuenta de Gmail
+          vinculada.
         </p>
-
-        <form
-          onSubmit={handleChangePassword}
-          autoComplete="off"
-          className="mt-6 flex flex-col gap-4"
-        >
-          {!mustChange && (
-            <div>
-              <label
-                htmlFor="change-current"
-                className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-              >
-                Contraseña actual
-              </label>
-              <input
-                id="change-current"
-                type="password"
-                autoComplete="off"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 px-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-              />
-            </div>
-          )}
-
-          <div>
-            <label
-              htmlFor="change-new"
-              className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              Nueva contraseña
-            </label>
-            <input
-              id="change-new"
-              type="password"
-              autoComplete="off"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 px-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="change-confirm"
-              className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300"
-            >
-              Confirmar nueva contraseña
-            </label>
-            <input
-              id="change-confirm"
-              type="password"
-              autoComplete="off"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Repite la nueva contraseña"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 px-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={pending}
-            className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus:ring-offset-slate-800"
-          >
-            {pending ? (
-              <Loader className="mx-auto" />
-            ) : (
-              <>
-                <i className="fa fa-key" />
-                Actualizar contraseña
-              </>
-            )}
-          </button>
-        </form>
 
         <button
           type="button"
-          onClick={handleBack}
+          onClick={handleGoogleOnlyLogin}
+          disabled={busy}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:ring-offset-slate-800"
+        >
+          {busy ? (
+            <Loader className="mx-auto" />
+          ) : (
+            <>
+              <i className="fa-brands fa-google text-base" />
+              Continuar con Google
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={onExit}
           className="mt-4 w-full text-center text-xs font-medium text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400"
         >
-          Volver
+          Volver al acceso administradores
         </button>
       </div>
     </div>
