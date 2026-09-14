@@ -84,7 +84,7 @@ function buildInviteUrl(req: Request, token: string): string | null {
   return `${origin.replace(/\/+$/, "")}/QmkAdminPanel/#type=invite&invite_token=${token}`;
 }
 
-/** Spanish, neutral, professional email body for the student invite. */
+/** Spanish, neutral, professional email body for the student confirmation. */
 function buildInviteHtml(email: string, inviteUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -92,12 +92,13 @@ function buildInviteHtml(email: string, inviteUrl: string): string {
   <meta charset="utf-8" />
 </head>
 <body style="font-family: Arial, Helvetica, sans-serif; color: #1e293b; line-height: 1.6;">
-  <h2>Invitación para ingresar con Google</h2>
+  <h2>Confirmación de tu correo</h2>
   <p>Hola,</p>
   <p>
-    Para ingresar al panel con tu cuenta, abre el siguiente enlace y elige
-    <strong>Continuar con Google</strong> usando tu correo de Gmail
-    (${email}).
+    Confirmamos que registraste el correo <strong>${email}</strong> para
+    ingresar al panel con tu cuenta de Google. Para completar el ingreso,
+    abre el siguiente enlace y elige <strong>Continuar con Google</strong>
+    usando ese mismo correo de Gmail (${email}).
   </p>
   <p><a href="${inviteUrl}">Abrir panel e ingresar con Google</a></p>
   <p>
@@ -271,7 +272,7 @@ serve(async (req) => {
     body: JSON.stringify({
       from,
       to: [email],
-      subject: "Invitación para ingresar con Google",
+      subject: "Confirmación de tu correo para ingresar al panel",
       html: buildInviteHtml(email, inviteUrl),
     }),
   });

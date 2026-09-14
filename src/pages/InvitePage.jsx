@@ -10,12 +10,12 @@ import Loader from "../components/Loader";
 export const INVITE_TOKEN_STORAGE_KEY = "qmk-invite-token";
 
 const INVITE_REASON_MESSAGES = {
-  INVITE_NOT_FOUND: "El enlace de invitación no es válido o ya no existe.",
-  ALREADY_USED: "Este enlace de invitación ya fue utilizado.",
+  INVITE_NOT_FOUND: "El enlace de confirmación no es válido o ya no existe.",
+  ALREADY_USED: "Este enlace de confirmación ya fue utilizado.",
   INVITE_EXPIRED:
-    "El enlace de invitación caducó. Los enlaces tienen una vigencia de 7 días.",
+    "El enlace de confirmación caducó. Los enlaces tienen una vigencia de 7 días.",
   NOT_LINKED:
-    "Este enlace está vinculado a otra cuenta de Google. Cierra la sesión actual y vuelve a abrir el enlace con la cuenta de Gmail que recibió la invitación.",
+    "Este enlace está vinculado a otra cuenta de Google. Cierra la sesión actual y vuelve a abrir el enlace con la cuenta de Gmail que recibió la confirmación.",
   INTERNAL: "Ocurrió un error al vincular la cuenta. Intenta de nuevo.",
 };
 
@@ -358,8 +358,8 @@ const InvitePage = ({ session, onComplete }) => {
       <>
         <h1 className={titleClass}>Vincular cuenta con Google</h1>
         <p className={hintClass}>
-          Tu invitación está lista. Continúa con Google usando la cuenta de
-          Gmail a la que llegó la invitación.
+          Tu correo quedó confirmado. Continúa con Google usando la cuenta de
+          Gmail a la que llegó la confirmación.
         </p>
         <button
           type="button"

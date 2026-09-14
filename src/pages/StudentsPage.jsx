@@ -21,7 +21,7 @@ const LinkStateBadge = ({ linked, invitePending }) => {
   if (invitePending) {
     return (
       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-        Invitación pendiente
+        Confirmación pendiente
       </span>
     );
   }
@@ -186,7 +186,7 @@ const StudentsPage = () => {
         "abrir el portal de estudiantes desde la pantalla de inicio " +
         "(«¿Eres estudiante? Gestiona tu contraseña»), ingresar su código y " +
         "contraseña actual, y registrar su correo de Gmail. " +
-        "Desde ahí recibirá la invitación para vincular su cuenta con Google.",
+        "Desde ahí recibirá la confirmación para vincular su cuenta con Google.",
       icon: "info",
       confirmButtonText: "Entendido",
       confirmButtonColor: "#2563eb",
@@ -294,7 +294,7 @@ const StudentsPage = () => {
                     grade: "Grado",
                     email: "Correo",
                     estado: "Estado",
-                    invitacion: "Invitación",
+                    invitacion: "Confirmación",
                   }}
                   onHandleEdit={handleEdit}
                   onHandleDelete={handleDelete}
