@@ -1,4 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
+import { toast } from "react-toastify";
 import Students from "../supabase/tables/students";
 import Courses from "../supabase/tables/courses";
 import { studentsFields } from "../models/fields";
@@ -32,6 +33,42 @@ const LinkStateBadge = ({ linked, invitePending }) => {
   );
 };
 
+// PR6: reenvio de la confirmacion desde el modulo de estudiantes. La RPC
+// admin (admin_resend_student_invite) valida el rol, revoca la invitacion
+// pendiente y emite un proof nuevo; el envio del correo reutiliza la edge
+// function send-student-invite del portal.
+const maskEmail = (email) => {
+  if (!email) return "";
+  const [local, domain] = email.split("@");
+  return `${local.slice(0, 2)}***@${domain}`;
+};
+
+const resendInviteError = (reason) => {
+  const messages = {
+    FORBIDDEN: "No tienes permisos para esta acción.",
+    STUDENT_NOT_FOUND: "Estudiante no encontrado.",
+    NO_EMAIL: "Este estudiante no tiene un correo registrado.",
+    ALREADY_LINKED: "Esta cuenta ya está vinculada con Google.",
+  };
+  return (
+    messages[reason] ?? "No se pudo reenviar la confirmación. Intenta de nuevo."
+  );
+};
+
+const resendSendError = (code) => {
+  const messages = {
+    INVALID_PROOF: "La confirmación no es válida. Intenta de nuevo.",
+    PROOF_USED: "La confirmación ya fue enviada. Revisa tu correo.",
+    INVITE_EXPIRED: "La confirmación caducó. Intenta de nuevo.",
+    GMAIL_ONLY: "Solo se admiten correos de Gmail.",
+    EMAIL_SEND_FAILED: "No se pudo enviar el correo. Intenta de nuevo.",
+  };
+  return (
+    messages[code] ??
+    "Ocurrió un error al enviar la confirmación. Intenta de nuevo."
+  );
+};
+
 const StudentsPage = () => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
@@ -44,6 +81,9 @@ const StudentsPage = () => {
   const [filterCourse, setFilterCourse] = useState("");
   // Opciones del select de Curso, en el formato que espera FormField.
   const [courseOptions, setCourseOptions] = useState([]);
+  // PR6: code del estudiante cuyo reenvio de confirmacion esta en vuelo
+  // (deshabilita el boton "Reenviar" de esa fila y muestra "Enviando...").
+  const [resendingCode, setResendingCode] = useState(null);
 
   function resetStates() {
     setStudents([]);
@@ -171,26 +211,32 @@ const StudentsPage = () => {
     await fetchData();
   };
 
-  // PR4: accion de invitacion por fila (estudiantes sin correo). La edge
-  // function send-student-invite no tiene ruta admin (scope PR2: solo proof de
-  // estudiante), asi que el flujo se re-encauza al protocolo de prueba del
-  // portal: el estudiante abre el portal, ingresa su codigo + contrasena
-  // actual y registra su Gmail; ahi mismo se envia la invitacion (pantalla
-  // "Revisa tu correo", PR3b). Se conserva la intencion del diseno (el admin
-  // inicia el flujo de invitacion del estudiante).
-  const handleInvite = (student) => {
-    Swal.fire({
-      title: "Invitar estudiante",
-      html:
-        `El estudiante <strong>${student.code}</strong> (${student.name}) debe ` +
-        "abrir el portal de estudiantes desde la pantalla de inicio " +
-        "(«¿Eres estudiante? Gestiona tu contraseña»), ingresar su código y " +
-        "contraseña actual, y registrar su correo de Gmail. " +
-        "Desde ahí recibirá la confirmación para vincular su cuenta con Google.",
-      icon: "info",
-      confirmButtonText: "Entendido",
-      confirmButtonColor: "#2563eb",
-    });
+  // PR6: reenvio real de la confirmacion por fila (solo estudiantes con
+  // correo y sin vincular). La RPC admin revoca la invitacion pendiente y
+  // emite un proof nuevo; el envio reutiliza la edge function del portal.
+  // Los flags de la vista no cambian (invite_pending sigue true, linked
+  // sigue false), por lo que la lista no se recarga tras el envio.
+  const handleResend = async (student) => {
+    setResendingCode(student.code);
+    try {
+      const response = await Students.resendStudentInvite(student.code);
+      if (response.error || !response.data?.ok) {
+        toast.error(resendInviteError(response.data?.reason));
+        return;
+      }
+      if (!response.sent?.ok) {
+        toast.error(resendSendError(response.sent?.code));
+        return;
+      }
+      toast.success(
+        `Correo de confirmación reenviado a ${maskEmail(response.data.email)}.`,
+      );
+    } catch (error) {
+      console.error(error);
+      toast.error("No se pudo reenviar la confirmación. Intenta de nuevo.");
+    } finally {
+      setResendingCode(null);
+    }
   };
 
   // Autocompleta el grado (oculto) cuando se selecciona un curso: el id del
@@ -307,17 +353,20 @@ const StudentsPage = () => {
                       />
                     ),
                     invitacion: (_value, student) =>
-                      student.email ? (
-                        "—"
-                      ) : (
+                      student.email && !student.linked ? (
                         <button
                           type="button"
-                          onClick={() => handleInvite(student)}
-                          className="flex items-center gap-1 rounded-md border border-blue-500 px-2 py-1 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white"
+                          disabled={resendingCode === student.code}
+                          onClick={() => handleResend(student)}
+                          className="flex items-center gap-1 rounded-md border border-blue-500 px-2 py-1 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           <i className="fa fa-envelope" />
-                          Invitar
+                          {resendingCode === student.code
+                            ? "Enviando..."
+                            : "Reenviar"}
                         </button>
+                      ) : (
+                        "—"
                       ),
                   }}
                 />

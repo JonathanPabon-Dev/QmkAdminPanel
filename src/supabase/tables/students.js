@@ -119,6 +119,35 @@ const Students = {
     }
   },
 
+  // PR6: reenvio de la confirmacion desde el modulo de estudiantes. La RPC
+  // admin genera un proof nuevo (revoca pendientes previos); el envio del
+  // correo reutiliza la misma edge function del portal.
+  resendStudentInvite: async (studentId) => {
+    try {
+      const response = await supabase.rpc("admin_resend_student_invite", {
+        p_student_id: studentId,
+      });
+      if (response.error || !response.data?.ok) {
+        return { ...response, sent: null };
+      }
+      const sent = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/send-student-invite`,
+        {
+          method: "POST",
+          headers: {
+            apikey: supabase.supabaseKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ proof: response.data.proof }),
+        },
+      );
+      return { ...response, sent: await sent.json() };
+    } catch (error) {
+      console.error(error);
+      return { error, sent: null };
+    }
+  },
+
   // PR4: rol del usuario autenticado ('admin' | 'teacher' | 'student' | null).
   // La RPC es security definer y solo admite sesiones autenticadas; data null
   // significa que la cuenta no tiene fila en user_roles (no admin).
