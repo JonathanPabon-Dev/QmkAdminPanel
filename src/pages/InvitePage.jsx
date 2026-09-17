@@ -109,9 +109,7 @@ const InvitePage = ({ session, onComplete }) => {
       const { error } = await supabase.auth.updateUser({ password });
 
       if (!cancelledRef.current && error) {
-        toast.error(
-          "No se pudo configurar la contraseña. Intenta de nuevo.",
-        );
+        toast.error("No se pudo configurar la contraseña. Intenta de nuevo.");
         return;
       }
 
@@ -205,7 +203,7 @@ const InvitePage = ({ session, onComplete }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Mínimo 6 caracteres"
-                className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 px-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
               />
             </div>
 
@@ -223,7 +221,7 @@ const InvitePage = ({ session, onComplete }) => {
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="Repite la contraseña"
-                className="w-full rounded-lg border border-slate-300 bg-slate-50 py-2 px-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
+                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder-slate-500 dark:focus:border-blue-400 dark:focus:ring-blue-400"
               />
             </div>
 
