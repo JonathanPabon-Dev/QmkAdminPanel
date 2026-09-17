@@ -130,6 +130,19 @@ const Students = {
       return { error };
     }
   },
+
+  // PR5: student row linked to the authenticated session (names, course_id,
+  // email and computed flags); data is null when the account has no linked
+  // student. Same security-definer pattern as get_my_role; consumed by the
+  // student dashboard (StudentDashboard).
+  getStudentByAuthUid: async () => {
+    try {
+      return await supabase.rpc("get_student_by_auth_uid");
+    } catch (error) {
+      console.error(error);
+      return { error };
+    }
+  },
 };
 
 export default Students;

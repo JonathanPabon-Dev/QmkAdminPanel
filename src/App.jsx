@@ -6,6 +6,7 @@ import Students from "./supabase/tables/students";
 import LoginPage from "./pages/LoginPage";
 import InvitePage, { INVITE_TOKEN_STORAGE_KEY } from "./pages/InvitePage";
 import StudentPasswordPortal from "./pages/StudentPasswordPortal";
+import StudentDashboard from "./pages/StudentDashboard";
 import Loader from "./components/Loader";
 
 const THEME_STORAGE_KEY = "qmk-theme";
@@ -233,7 +234,19 @@ const App = () => {
     );
   }
 
+  // PR5: authenticated students get their own workspace. keyed by uid so a
+  // session switch remounts the dashboard. Teachers and unmapped accounts
+  // keep RestrictedView.
   if (roleForSession.role !== "admin") {
+    if (roleForSession.role === "student") {
+      return (
+        <StudentDashboard
+          key={sessionUid}
+          isDark={isDark}
+          onLogout={handleLogout}
+        />
+      );
+    }
     return (
       <RestrictedView
         email={session.user.email}
