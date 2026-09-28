@@ -291,9 +291,6 @@ const ResultsPage = () => {
   return (
     <>
       <div className="container mx-auto my-16 flex w-fit min-w-[15%] max-w-[90%] flex-col items-center justify-center gap-2">
-        <h1 className="mb-6 w-full text-xl font-bold uppercase text-slate-900 dark:text-slate-100">
-          Resultados
-        </h1>
         <div className="mb-10 flex w-full gap-2">
           <input
             type="search"
