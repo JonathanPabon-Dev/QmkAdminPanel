@@ -2,6 +2,8 @@ import { useCallback, useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import Results from "../supabase/tables/results";
 import Courses from "../supabase/tables/courses";
+import Students from "../supabase/tables/students";
+import Quizzes from "../supabase/tables/quizzes";
 import Loader from "../components/Loader";
 
 // Umbral de aprobación usado para colorear la nota (6.0 sobre 10).
@@ -29,49 +31,62 @@ const ResultsPage = () => {
   const [answersLoading, setAnswersLoading] = useState(false);
   const [answersError, setAnswersError] = useState("");
 
+  // Patrón del padrón: v_students trae TODOS los estudiantes (resultados o
+  // no); quizzes trae el banco completo con sus cursos asignados; la vista
+  // v_quiz_result_rows aporta las correctas/totales de quien ya presentó.
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await Results.getResults();
-      const data = response.data ?? [];
+      const [studentsResponse, quizzesResponse, resultsResponse] =
+        await Promise.all([
+          Students.getStudents(),
+          Quizzes.getQuizzes(),
+          Results.getResults(),
+        ]);
+      if (studentsResponse?.error) throw studentsResponse.error;
+      if (quizzesResponse?.error) throw quizzesResponse.error;
+      if (resultsResponse?.error) throw resultsResponse.error;
 
-      // Cuestionarios presentes en los datos, ordenados por id (alfabético).
-      const quizMap = new Map();
-      data.forEach((row) => {
-        if (!quizMap.has(row.quiz_id)) {
-          quizMap.set(row.quiz_id, {
-            quiz_id: row.quiz_id,
-            quiz_topic: row.quiz_topic,
-          });
-        }
-      });
-      const sortedQuizzes = [...quizMap.values()].sort((a, b) =>
-        String(a.quiz_id).localeCompare(String(b.quiz_id)),
-      );
+      // Cuestionarios del banco, con sus cursos asignados y el cierre de
+      // notas; ordenados por id (alfabético).
+      const sortedQuizzes = (quizzesResponse.data ?? [])
+        .map((quiz) => ({
+          quiz_id: quiz.id,
+          quiz_topic: quiz.topic,
+          quiz_question_count: quiz.question_count,
+          quiz_courses: (quiz.quiz_courses ?? []).map(
+            (relation) => relation.course_id,
+          ),
+          closed_at: quiz.closed_at ?? null,
+        }))
+        .sort((a, b) => String(a.quiz_id).localeCompare(String(b.quiz_id)));
       setQuizzes(sortedQuizzes);
 
-      // Agrupa las filas por estudiante; un resultado por cuestionario.
+      // Padrón de estudiantes desde v_students: TODOS, aunque no tengan
+      // resultados (celda pendiente P o vacía según su curso).
       const studentMap = new Map();
-      data.forEach((row) => {
-        let student = studentMap.get(row.student_id);
-        if (!student) {
-          student = {
-            student_id: row.student_id,
-            student_number_list: row.student_number_list,
-            student_name: row.student_name,
-            student_grade: row.student_grade,
-            results: {},
-          };
-          studentMap.set(row.student_id, student);
-        }
-        // Relación correctas/totales: el total es quiz_question_count (la
-        // cantidad parametrizada "Nº Preguntas a Evaluar" del quiz), NO el
-        // total de respuestas registradas para ese estudiante.
+      (studentsResponse.data ?? []).forEach((student) => {
+        studentMap.set(student.code, {
+          student_id: student.code,
+          student_number_list: student.number_list,
+          student_name: student.name,
+          student_grade: student.grade,
+          results: {},
+        });
+      });
+
+      // Relación correctas/totales por (estudiante x cuestionario): el total
+      // es quiz_question_count (la cantidad parametrizada "Nº Preguntas a
+      // Evaluar" del quiz), NO el total de respuestas registradas.
+      (resultsResponse.data ?? []).forEach((row) => {
+        const student = studentMap.get(row.student_id);
+        if (!student) return;
         student.results[row.quiz_id] = {
           correct: row.correct_answers,
           total: row.quiz_question_count,
         };
       });
+
       // Orden: primero por grado, luego por nombre.
       const sortedStudents = [...studentMap.values()].sort((a, b) => {
         const gradeCompare = (a.student_grade ?? "").localeCompare(
@@ -190,20 +205,64 @@ const ResultsPage = () => {
     }
   };
 
+  // Cierra o reabre las notas de un cuestionario. Al cerrar, los pendientes
+  // (P) pasan a calificación 0.0 en toda la tabla; es reversible.
+  const handleToggleCloseQuiz = async (quiz, closing) => {
+    if (closing) {
+      const result = await Swal.fire({
+        title: "Cerrar notas",
+        text: `Los estudiantes sin resultado en "${quiz.quiz_topic}" quedarán con 0.0. Puede reabrir las notas más adelante.`,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#009c0d",
+        confirmButtonText: "Cerrar",
+        cancelButtonText: "Cancelar",
+      });
+      if (!result.isConfirmed) return;
+    }
+    const response = closing
+      ? await Quizzes.closeQuiz(quiz.quiz_id)
+      : await Quizzes.reopenQuiz(quiz.quiz_id);
+    if (response?.error) {
+      console.error(response.error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo actualizar el cierre de notas. Intente nuevamente.",
+      });
+      return;
+    }
+    await fetchData();
+    Swal.fire({
+      icon: "success",
+      title: closing ? "Notas cerradas" : "Notas reabiertas",
+      text: closing
+        ? "Los pendientes ahora cuentan como 0.0."
+        : "Los pendientes vuelven a mostrarse como P.",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+  };
+
   // Nota promedio del estudiante (1-10): suma de correctas sobre suma de
-  // totales parametrizados de los cuestionarios mostrados.
+  // totales de los cuestionarios ASIGNADOS a su curso. Los pendientes (P)
+  // cuentan como 0 correctas pero suman su total, tal como califica un cierre.
   const getAverage = (student) => {
     let correctSum = 0;
     let totalSum = 0;
     quizzes.forEach((quiz) => {
+      if (!quiz.quiz_courses.includes(student.student_grade)) return;
       const result = student.results[quiz.quiz_id];
-      if (
-        result &&
-        typeof result.correct === "number" &&
-        typeof result.total === "number"
-      ) {
-        correctSum += result.correct;
-        totalSum += result.total;
+      const correct =
+        result && typeof result.correct === "number" ? result.correct : 0;
+      const total =
+        result && typeof result.total === "number"
+          ? result.total
+          : quiz.quiz_question_count;
+      if (typeof total === "number" && total > 0) {
+        correctSum += correct;
+        totalSum += total;
       }
     });
     if (totalSum === 0) return "—";
@@ -345,7 +404,34 @@ const ResultsPage = () => {
                             title={quiz.quiz_topic}
                             className="px-6 py-3"
                           >
-                            {quiz.quiz_id}
+                            <div className="flex flex-col items-center gap-1">
+                              <span>{quiz.quiz_id}</span>
+                              {quiz.closed_at ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleCloseQuiz(quiz, false)
+                                  }
+                                  title="Reabrir notas"
+                                  className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700 hover:bg-amber-200 dark:bg-amber-900/40 dark:text-amber-400 dark:hover:bg-amber-900/60"
+                                >
+                                  <i className="fa fa-lock" />
+                                  Cerrado
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleToggleCloseQuiz(quiz, true)
+                                  }
+                                  title="Cerrar notas: los pendientes pasan a 0"
+                                  className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500 hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500"
+                                >
+                                  <i className="fa fa-circle-check" />
+                                  Cerrar
+                                </button>
+                              )}
+                            </div>
                           </th>
                         ))}
                       </tr>
@@ -387,15 +473,44 @@ const ResultsPage = () => {
                               result &&
                               typeof result.correct === "number" &&
                               typeof result.total === "number";
+                            const assigned = quiz.quiz_courses.includes(
+                              student.student_grade,
+                            );
+                            // Sin asignación al curso del estudiante: vacío.
+                            if (!assigned) {
+                              return (
+                                <td
+                                  key={quiz.quiz_id}
+                                  className="px-6 py-4 text-center"
+                                />
+                              );
+                            }
+                            // Asignado sin resultado: pendiente P, o 0.0 si
+                            // las notas de ese cuestionario están cerradas.
                             if (!hasResult) {
+                              const closed =
+                                quiz.closed_at !== null &&
+                                quiz.closed_at !== undefined;
                               return (
                                 <td
                                   key={quiz.quiz_id}
                                   className="px-6 py-4 text-center"
                                 >
-                                  <span className="text-gray-400 dark:text-gray-500">
-                                    —
-                                  </span>
+                                  {closed ? (
+                                    <span
+                                      title="Cerrado sin presentar"
+                                      className="font-semibold text-red-600 dark:text-red-400"
+                                    >
+                                      0.0
+                                    </span>
+                                  ) : (
+                                    <span
+                                      title="Pendiente de presentar"
+                                      className="font-semibold text-amber-600 dark:text-amber-400"
+                                    >
+                                      P
+                                    </span>
+                                  )}
                                 </td>
                               );
                             }

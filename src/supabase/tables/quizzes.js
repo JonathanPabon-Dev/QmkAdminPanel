@@ -71,6 +71,42 @@ const Quizzes = {
     }
   },
 
+  // Cierre de notas: marca el cuestionario como cerrado (los pendientes pasan
+  // a calificación 0 en Resultados). Reversible: reopen restaura los P.
+  closeQuiz: async (quizId) => {
+    try {
+      const response = await supabase
+        .from("quizzes")
+        .update({ closed_at: new Date().toISOString() })
+        .eq("id", quizId);
+      if (response.status === 204) {
+        toast.success("Notas cerradas correctamente");
+      } else {
+        toast.error("Error al cerrar las notas");
+      }
+      return response;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  reopenQuiz: async (quizId) => {
+    try {
+      const response = await supabase
+        .from("quizzes")
+        .update({ closed_at: null })
+        .eq("id", quizId);
+      if (response.status === 204) {
+        toast.success("Notas reabiertas correctamente");
+      } else {
+        toast.error("Error al reabrir las notas");
+      }
+      return response;
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
   deleteQuizzes: async (quizId) => {
     try {
       const response = await supabase.from("quizzes").delete().eq("id", quizId);
