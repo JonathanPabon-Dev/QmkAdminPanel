@@ -460,10 +460,10 @@ const QuizzesPage = () => {
           <div className="flex w-full flex-col gap-4">
             <h2 className="text-xl font-bold uppercase dark:text-slate-100">
               {viewMode === "insert"
-                ? "Nuevo quiz"
+                ? "Nuevo"
                 : viewMode === "view"
-                  ? "Ver quiz"
-                  : "Editar quiz"}
+                  ? "Ver"
+                  : "Editar"}
             </h2>
             <form
               onSubmit={handleSave}
@@ -887,7 +887,7 @@ const QuizzesPage = () => {
                 type="search"
                 name="quizSearch"
                 id="quizFilter"
-                placeholder="Buscar prueba/quiz ..."
+                placeholder="Buscar cuestionario ..."
                 value={filterValue}
                 onChange={(e) => setFilterValue(e.target.value)}
                 autoComplete="off"
