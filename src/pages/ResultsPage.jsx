@@ -132,13 +132,16 @@ const ResultsPage = () => {
     }
   };
 
-  const closeDetail = () => {
+  // useCallback con deps vacías: solo invoca setters de useState, que React
+  // garantiza estables. Sin esto la identidad cambia en cada render y el
+  // useEffect de la tecla Escape se re-suscribe en cada render.
+  const closeDetail = useCallback(() => {
     setDetailOpen(false);
     setDetailStudent(null);
     setDetailQuiz(null);
     setAnswers([]);
     setAnswersError("");
-  };
+  }, []);
 
   // Elimina el resultado (answers + quiz_results) del estudiante en el quiz.
   const handleDeleteResult = async () => {
