@@ -1,0 +1,14 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+
+# Generated lockfile: never hand-format. Prettier rewrites it wholesale
+# (~3.2k line diff) and CI runs `pnpm install --frozen-lockfile`.
+pnpm-lock.yaml
+
+# Local tooling state
+.atl
+supabase/.temp
