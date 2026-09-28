@@ -74,7 +74,7 @@ const Modal = ({
         const url = await onFileChange(
           name,
           ev.target.files[0],
-          formValues[name]
+          formValues[name],
         );
         if (typeof url === "string" && url !== "") {
           setFormValues((prevValues) => ({ ...prevValues, [name]: url }));

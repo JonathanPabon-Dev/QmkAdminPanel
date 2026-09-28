@@ -19,10 +19,7 @@ const correctOptionsList = [
 // al hacer hover) and, when present, its thumbnail below it.
 const makeTextWithImageRenderer = (imageKey, altText) => (text, row) => (
   <div className="min-w-0">
-    <div
-      title={text}
-      className="line-clamp-2 max-w-xs overflow-hidden"
-    >
+    <div title={text} className="line-clamp-2 max-w-xs overflow-hidden">
       {text}
     </div>
     {row[imageKey] && (
@@ -159,7 +156,7 @@ const QuestionsPage = () => {
         const cleanup = await Questions.removeImages(removed);
         if (cleanup.error) {
           toast.warn(
-            "La pregunta se guardó, pero no se pudieron borrar las imágenes quitadas."
+            "La pregunta se guardó, pero no se pudieron borrar las imágenes quitadas.",
           );
         }
       }
@@ -203,7 +200,7 @@ const QuestionsPage = () => {
       const cleanup = await Questions.removeImage(previousUrl);
       if (cleanup.error) {
         toast.warn(
-          "La imagen nueva se subió, pero la anterior no pudo borrarse."
+          "La imagen nueva se subió, pero la anterior no pudo borrarse.",
         );
       }
     }
@@ -287,23 +284,23 @@ const QuestionsPage = () => {
                   renderers={{
                     question_text: makeTextWithImageRenderer(
                       "question_image_url",
-                      "Pregunta"
+                      "Pregunta",
                     ),
                     option_1_text: makeTextWithImageRenderer(
                       "option_1_image_url",
-                      "Opción 1"
+                      "Opción 1",
                     ),
                     option_2_text: makeTextWithImageRenderer(
                       "option_2_image_url",
-                      "Opción 2"
+                      "Opción 2",
                     ),
                     option_3_text: makeTextWithImageRenderer(
                       "option_3_image_url",
-                      "Opción 3"
+                      "Opción 3",
                     ),
                     option_4_text: makeTextWithImageRenderer(
                       "option_4_image_url",
-                      "Opción 4"
+                      "Opción 4",
                     ),
                   }}
                   onHandleView={handleView}

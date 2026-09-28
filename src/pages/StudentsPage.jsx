@@ -260,9 +260,7 @@ const StudentsPage = () => {
     const timer = setTimeout(() => {
       let filtered = students;
       if (filterCourse) {
-        filtered = filtered.filter(
-          (student) => student.grade === filterCourse,
-        );
+        filtered = filtered.filter((student) => student.grade === filterCourse);
       }
       if (filterValue.trim()) {
         const filter = filterValue.toLowerCase();

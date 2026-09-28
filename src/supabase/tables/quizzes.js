@@ -17,7 +17,9 @@ const Quizzes = {
   getQuizzes: async () => {
     try {
       // Incluye quiz_courses para mostrar los cursos asociados en el listado.
-      const response = await supabase.from("quizzes").select("*, quiz_courses(*)");
+      const response = await supabase
+        .from("quizzes")
+        .select("*, quiz_courses(*)");
       return response;
     } catch (error) {
       console.error(error);
@@ -183,9 +185,7 @@ const Quizzes = {
         available_since_time: course.available_since_time || null,
         available_until_time: course.available_until_time || null,
       }));
-      const insertResponse = await supabase
-        .from("quiz_courses")
-        .insert(rows);
+      const insertResponse = await supabase.from("quiz_courses").insert(rows);
       if (insertResponse.error) {
         toast.error("Error al guardar los cursos");
       }

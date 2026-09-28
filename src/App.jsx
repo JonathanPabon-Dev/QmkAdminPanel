@@ -76,7 +76,11 @@ const App = () => {
   // PR4: rol de la sesion actual. roleState guarda junto al rol el uid para el
   // que fue consultado: un rol viejo de otra sesion nunca se aplica a la
   // sesion nueva (se trata como pendiente hasta volver a consultar).
-  const [roleState, setRoleState] = useState({ uid: null, role: null, status: "idle" });
+  const [roleState, setRoleState] = useState({
+    uid: null,
+    role: null,
+    status: "idle",
+  });
   const [roleRetry, setRoleRetry] = useState(0);
   const isDark = theme === "dark";
 

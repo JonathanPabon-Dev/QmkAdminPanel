@@ -1,7 +1,7 @@
 # send-student-invite
 
 Supabase Edge Function that sends a student their Google sign-in invite email
-via Resend. This is PR2 of the *student-google-auth-and-roles* change: it is
+via Resend. This is PR2 of the _student-google-auth-and-roles_ change: it is
 the server boundary that turns a successful `register_student_email` call
 (which returns a single-use `proof`) into a real emailed invite.
 
@@ -49,13 +49,13 @@ do not rely on `verify_jwt` alone.
 
 ## Environment variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `RESEND_API_KEY` | **Yes** | Resend API key (`supabase secrets set RESEND_API_KEY ...`). Missing key → `500 { ok:false, code:"INTERNAL" }`. |
-| `SEND_FROM` | No | Sender address, e.g. `alerts@yourdomain.com`. Defaults to Resend's test sender `onboarding@resend.dev` (only works with your Resend account email until a verified domain is added). |
-| `PORTAL_URL` | Recommended | Origin of the portal deployment, e.g. `https://panel.misitio.com`. The email link is built as `<PORTAL_URL>/QmkAdminPanel/#type=invite&invite_token=<token>` (the `/QmkAdminPanel/` base matches `vite.config.js`). When unset, the request `Origin` header is used as fallback; if neither exists the function returns `500 INTERNAL` because the email would have no usable link. |
-| `SUPABASE_URL` | Injected | Provided automatically by the platform. Do not set manually. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Injected | Provided automatically by the platform. Do not set manually. |
+| Variable                    | Required    | Description                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`            | **Yes**     | Resend API key (`supabase secrets set RESEND_API_KEY ...`). Missing key → `500 { ok:false, code:"INTERNAL" }`.                                                                                                                                                                                                                                                                      |
+| `SEND_FROM`                 | No          | Sender address, e.g. `alerts@yourdomain.com`. Defaults to Resend's test sender `onboarding@resend.dev` (only works with your Resend account email until a verified domain is added).                                                                                                                                                                                                |
+| `PORTAL_URL`                | Recommended | Origin of the portal deployment, e.g. `https://panel.misitio.com`. The email link is built as `<PORTAL_URL>/QmkAdminPanel/#type=invite&invite_token=<token>` (the `/QmkAdminPanel/` base matches `vite.config.js`). When unset, the request `Origin` header is used as fallback; if neither exists the function returns `500 INTERNAL` because the email would have no usable link. |
+| `SUPABASE_URL`              | Injected    | Provided automatically by the platform. Do not set manually.                                                                                                                                                                                                                                                                                                                        |
+| `SUPABASE_SERVICE_ROLE_KEY` | Injected    | Provided automatically by the platform. Do not set manually.                                                                                                                                                                                                                                                                                                                        |
 
 ## Deployment
 
@@ -96,17 +96,17 @@ Request body:
 
 Response (JSON, always with CORS headers):
 
-| HTTP status | Body | Meaning |
-|---|---|---|
-| `200` | `{ "ok": true, "to": "em***@gmail.com" }` | Email sent; proof consumed. `to` is the masked recipient. |
-| `400` | `{ "ok": false, "code": "INVALID_PROOF" }` | Malformed body or non-UUID proof. |
-| `400` | `{ "ok": false, "code": "GMAIL_ONLY" }` | Invite email is not a Gmail address (defense in depth; the RPC already enforces this). |
-| `404` | `{ "ok": false, "code": "INVALID_PROOF" }` | No invite row for this proof, or the invite is no longer pending (used/revoked). |
-| `405` | `{ "ok": false, "code": "INVALID_PROOF" }` | Non-POST/OPTIONS method. |
-| `409` | `{ "ok": false, "code": "PROOF_USED" }` | Proof already consumed (or consumed concurrently). |
-| `410` | `{ "ok": false, "code": "INVITE_EXPIRED" }` | Invite past `expires_at` (7 days). |
-| `502` | `{ "ok": false, "code": "EMAIL_SEND_FAILED" }` | Resend rejected the email. **Proof NOT consumed** — the portal can retry. |
-| `500` | `{ "ok": false, "code": "INTERNAL" }` | Missing env, database/auth error, or inconsistent linkage. |
+| HTTP status | Body                                           | Meaning                                                                                |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `200`       | `{ "ok": true, "to": "em***@gmail.com" }`      | Email sent; proof consumed. `to` is the masked recipient.                              |
+| `400`       | `{ "ok": false, "code": "INVALID_PROOF" }`     | Malformed body or non-UUID proof.                                                      |
+| `400`       | `{ "ok": false, "code": "GMAIL_ONLY" }`        | Invite email is not a Gmail address (defense in depth; the RPC already enforces this). |
+| `404`       | `{ "ok": false, "code": "INVALID_PROOF" }`     | No invite row for this proof, or the invite is no longer pending (used/revoked).       |
+| `405`       | `{ "ok": false, "code": "INVALID_PROOF" }`     | Non-POST/OPTIONS method.                                                               |
+| `409`       | `{ "ok": false, "code": "PROOF_USED" }`        | Proof already consumed (or consumed concurrently).                                     |
+| `410`       | `{ "ok": false, "code": "INVITE_EXPIRED" }`    | Invite past `expires_at` (7 days).                                                     |
+| `502`       | `{ "ok": false, "code": "EMAIL_SEND_FAILED" }` | Resend rejected the email. **Proof NOT consumed** — the portal can retry.              |
+| `500`       | `{ "ok": false, "code": "INTERNAL" }`          | Missing env, database/auth error, or inconsistent linkage.                             |
 
 Preflight: `OPTIONS` → `200` with
 `Access-Control-Allow-Origin: *` and

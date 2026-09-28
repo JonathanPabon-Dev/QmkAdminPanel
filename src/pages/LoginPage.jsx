@@ -33,9 +33,7 @@ const LoginPage = ({ onStudentAccess }) => {
       });
 
       if (!cancelledRef.current && error) {
-        toast.error(
-          "Credenciales incorrectas. Verifica e intenta de nuevo.",
-        );
+        toast.error("Credenciales incorrectas. Verifica e intenta de nuevo.");
       }
     } finally {
       if (!cancelledRef.current) {
@@ -76,10 +74,10 @@ const LoginPage = ({ onStudentAccess }) => {
         </p>
 
         <form
-        onSubmit={handleSubmit}
-        autoComplete="off"
-        className="mt-6 flex flex-col gap-4"
-      >
+          onSubmit={handleSubmit}
+          autoComplete="off"
+          className="mt-6 flex flex-col gap-4"
+        >
           <div>
             <label
               htmlFor="login-email"

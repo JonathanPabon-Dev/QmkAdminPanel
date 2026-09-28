@@ -30,10 +30,11 @@ const Table = ({
               className="border-b bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-900"
             >
               {Object.keys(headers).map((key) => (
-                <td key={key} className="px-6 py-4 text-slate-700 dark:text-slate-200">
-                  {renderers[key]
-                    ? renderers[key](data[key], data)
-                    : data[key]}
+                <td
+                  key={key}
+                  className="px-6 py-4 text-slate-700 dark:text-slate-200"
+                >
+                  {renderers[key] ? renderers[key](data[key], data) : data[key]}
                 </td>
               ))}
               {/* Las filas de tablas reales traen su PK en "id"; la vista

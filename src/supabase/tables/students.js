@@ -9,7 +9,9 @@ const Students = {
       // en la tabla de estudiantes.
       const response = await supabase
         .from("v_students")
-        .select("code, number_list, name, grade, email, linked, invite_pending");
+        .select(
+          "code, number_list, name, grade, email, linked, invite_pending",
+        );
       return response;
     } catch (error) {
       console.error(error);

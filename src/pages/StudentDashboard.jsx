@@ -38,7 +38,8 @@ const StudentDashboard = ({ isDark, onLogout }) => {
     let cancelled = false;
     (async () => {
       setStatus("loading");
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
       if (cancelled) return;
       if (userError) {
         setStatus("error");
@@ -114,8 +115,8 @@ const StudentDashboard = ({ isDark, onLogout }) => {
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             Tu cuenta no está asociada a ningún estudiante. Pide al
-            administrador que vincule tu código de estudiante para acceder a
-            tus módulos.
+            administrador que vincule tu código de estudiante para acceder a tus
+            módulos.
           </p>
           <p className="mt-3 truncate text-xs text-slate-400 dark:text-slate-500">
             {email}

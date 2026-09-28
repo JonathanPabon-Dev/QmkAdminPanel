@@ -39,7 +39,11 @@ function json(
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...CORS_HEADERS, ...extraHeaders },
+    headers: {
+      "Content-Type": "application/json",
+      ...CORS_HEADERS,
+      ...extraHeaders,
+    },
   });
 }
 
@@ -66,8 +70,9 @@ function isDuplicateEmailError(
   if (err.code === "email_exists" || err.code === "user_already_exists") {
     return true;
   }
-  return /email_exists|already been registered|already registered|user already exists/i
-    .test(err.message ?? "");
+  return /email_exists|already been registered|already registered|user already exists/i.test(
+    err.message ?? "",
+  );
 }
 
 /**
@@ -209,8 +214,9 @@ serve(async (req) => {
     // Duplicate email (race with the register call or a previous partial
     // attempt): fetch the existing user. getUserByEmail does not exist in
     // supabase-js v2, so listUsers + exact email match is the lookup used.
-    const { data: users, error: listErr } = await supabase.auth.admin
-      .listUsers({ page: 1, perPage: 1000 });
+    const { data: users, error: listErr } = await supabase.auth.admin.listUsers(
+      { page: 1, perPage: 1000 },
+    );
     if (listErr) {
       return error("INTERNAL", 500);
     }

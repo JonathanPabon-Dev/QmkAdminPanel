@@ -37,7 +37,7 @@ const QuestionViewModal = ({ question, isOpen, onClose }) => {
     <div
       tabIndex="-1"
       onClick={onClose}
-      className="fixed left-0 right-0 top-0 z-50 flex h-full max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-85 backdrop-blur-sm p-4 md:inset-0"
+      className="fixed left-0 right-0 top-0 z-50 flex h-full max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-85 p-4 backdrop-blur-sm md:inset-0"
     >
       <div
         onClick={(event) => event.stopPropagation()}

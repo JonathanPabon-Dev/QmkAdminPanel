@@ -24,10 +24,7 @@ const storagePathFromPublicUrl = (publicUrl) => {
 const Questions = {
   getQuestions: async () => {
     try {
-      const response = await supabase
-        .from("questions")
-        .select()
-        .order("id");
+      const response = await supabase.from("questions").select().order("id");
       return response;
     } catch (error) {
       console.error(error);
@@ -82,12 +79,10 @@ const Questions = {
   // can decide how to surface a cleanup failure.
   removeQuestionImages: async (question) => {
     const paths = IMAGE_KEYS.map((key) =>
-      storagePathFromPublicUrl(question?.[key])
+      storagePathFromPublicUrl(question?.[key]),
     ).filter(Boolean);
     if (paths.length === 0) return { error: null };
-    const response = await supabase.storage
-      .from(IMAGE_BUCKET)
-      .remove(paths);
+    const response = await supabase.storage.from(IMAGE_BUCKET).remove(paths);
     if (response.error) {
       console.error(response.error);
     }
@@ -107,7 +102,7 @@ const Questions = {
         const cleanup = await Questions.removeQuestionImages(question);
         if (cleanup.error) {
           toast.warn(
-            "La pregunta se eliminó, pero no se pudieron borrar sus imágenes."
+            "La pregunta se eliminó, pero no se pudieron borrar sus imágenes.",
           );
         }
       } else {
@@ -126,9 +121,7 @@ const Questions = {
       .map((url) => storagePathFromPublicUrl(url))
       .filter(Boolean);
     if (paths.length === 0) return { error: null };
-    const response = await supabase.storage
-      .from(IMAGE_BUCKET)
-      .remove(paths);
+    const response = await supabase.storage.from(IMAGE_BUCKET).remove(paths);
     if (response.error) {
       console.error(response.error);
     }
@@ -148,7 +141,7 @@ const Questions = {
     try {
       const path = `question-options/${Date.now()}-${file.name.replace(
         /[^a-zA-Z0-9._-]/g,
-        "_"
+        "_",
       )}`;
       const { error } = await supabase.storage
         .from("question-options")

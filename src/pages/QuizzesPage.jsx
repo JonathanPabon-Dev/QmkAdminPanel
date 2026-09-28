@@ -272,9 +272,7 @@ const QuizzesPage = () => {
         },
       ]),
     );
-    setAvailableCourses((prev) =>
-      prev.filter((c) => c.id !== course.id),
-    );
+    setAvailableCourses((prev) => prev.filter((c) => c.id !== course.id));
     setSelectedCourse("");
   };
 
@@ -364,7 +362,9 @@ const QuizzesPage = () => {
       .filter((field) => field.required)
       .some((field) => !String(formValues[field.name] ?? "").trim());
     if (missing) {
-      setStepError("Complete los campos obligatorios de Información básica para continuar.");
+      setStepError(
+        "Complete los campos obligatorios de Información básica para continuar.",
+      );
       return false;
     }
     setStepError("");
@@ -443,8 +443,7 @@ const QuizzesPage = () => {
     ? availableQuestions.filter((question) => {
         const search = availableSearch.toLowerCase();
         return (
-          (question.id &&
-            question.id.toLowerCase().includes(search)) ||
+          (question.id && question.id.toLowerCase().includes(search)) ||
           (question.question_text &&
             question.question_text.toLowerCase().includes(search))
         );
@@ -553,7 +552,7 @@ const QuizzesPage = () => {
                       onChange={(e) => setSelectedCourse(e.target.value)}
                       disabled={isReadOnly}
                       autoComplete="off"
-                      className="w-full rounded-md border-2 border-slate-500 bg-white p-2 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="w-full rounded-md border-2 border-slate-500 bg-white p-2 outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-100"
                     >
                       <option value="">
                         {isReadOnly
@@ -627,7 +626,7 @@ const QuizzesPage = () => {
                                   }
                                   disabled={isReadOnly}
                                   autoComplete="off"
-                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-100"
                                 />
                               </td>
                               <td className="px-4 py-2">
@@ -644,7 +643,7 @@ const QuizzesPage = () => {
                                   }
                                   disabled={isReadOnly}
                                   autoComplete="off"
-                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-100"
                                 />
                               </td>
                               <td className="px-4 py-2">
@@ -661,7 +660,7 @@ const QuizzesPage = () => {
                                   }
                                   disabled={isReadOnly}
                                   autoComplete="off"
-                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-100"
                                 />
                               </td>
                               <td className="px-4 py-2">
@@ -678,7 +677,7 @@ const QuizzesPage = () => {
                                   }
                                   disabled={isReadOnly}
                                   autoComplete="off"
-                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none dark:bg-slate-800 dark:text-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="w-full rounded-md border-2 border-slate-500 p-1 outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:bg-slate-800 dark:text-slate-100"
                                 />
                               </td>
                               <td className="px-4 py-2 text-right">
@@ -856,7 +855,7 @@ const QuizzesPage = () => {
                     type="button"
                     onClick={handleNext}
                     disabled={activeStep === steps.length - 1}
-                    className="rounded-lg border-2 border-primary-600 px-4 py-2 text-sm font-semibold text-primary-600 hover:bg-primary-600 hover:text-white disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent disabled:hover:text-gray-300 dark:disabled:border-gray-700 dark:disabled:text-gray-600 dark:disabled:hover:bg-transparent dark:disabled:hover:text-gray-600"
+                    className="border-primary-600 text-primary-600 hover:bg-primary-600 rounded-lg border-2 px-4 py-2 text-sm font-semibold hover:text-white disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-300 disabled:hover:bg-transparent disabled:hover:text-gray-300 dark:disabled:border-gray-700 dark:disabled:text-gray-600 dark:disabled:hover:bg-transparent dark:disabled:hover:text-gray-600"
                   >
                     Siguiente
                   </button>
