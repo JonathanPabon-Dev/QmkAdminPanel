@@ -338,6 +338,9 @@ const ResultsPage = () => {
                         <th scope="col" className="px-6 py-3">
                           Nombre
                         </th>
+                        <th scope="col" className="px-6 py-3">
+                          Prom
+                        </th>
                         {quizzes.map((quiz) => (
                           <th
                             key={quiz.quiz_id}
@@ -348,9 +351,6 @@ const ResultsPage = () => {
                             {quiz.quiz_id}
                           </th>
                         ))}
-                        <th scope="col" className="px-6 py-3">
-                          Prom
-                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -368,6 +368,22 @@ const ResultsPage = () => {
                           <td className="px-6 py-4 text-slate-700 dark:text-slate-200">
                             {student.student_name}
                           </td>
+                          {(() => {
+                            const average = getAverage(student);
+                            // "—" = estudiante sin resultados: gris neutro,
+                            // no nota reprobada.
+                            const averageColor =
+                              average === "—"
+                                ? "text-gray-400 dark:text-gray-500"
+                                : scoreClass(Number(average));
+                            return (
+                              <td
+                                className={`px-6 py-4 text-center font-semibold ${averageColor}`}
+                              >
+                                {average}
+                              </td>
+                            );
+                          })()}
                           {quizzes.map((quiz) => {
                             const result = student.results[quiz.quiz_id];
                             const hasResult =
@@ -411,9 +427,6 @@ const ResultsPage = () => {
                               </td>
                             );
                           })}
-                          <td className="px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-200">
-                            {getAverage(student)}
-                          </td>
                         </tr>
                       ))}
                     </tbody>
