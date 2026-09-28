@@ -1,0 +1,43 @@
+# 🔍 Quality gates: lint, formatting and build.
+#
+# Kept separate from static.yml on purpose. A formatting slip should fail this
+# check loudly, not block the GitHub Pages deployment.
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+# ⏱️ One run per ref; a newer push supersedes an in-flight run.
+concurrency:
+  group: "ci-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, format and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📂 Checkout
+        uses: actions/checkout@v4
+      - name: ⚡️ Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - name: 📦 Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: 🧹 Lint
+        run: pnpm lint
+      - name: 🎨 Check formatting
+        run: pnpm format:check
+      - name: 🛠️ Build
+        run: pnpm build
