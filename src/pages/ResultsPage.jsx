@@ -328,7 +328,7 @@ const ResultsPage = () => {
                 <div className="relative mx-auto w-fit overflow-x-auto rounded-xl shadow-md">
                   <table className="table-auto text-left text-sm text-gray-500 dark:text-gray-400">
                     <thead className="bg-gray-50 text-center text-xs uppercase text-gray-700 dark:bg-gray-700 dark:text-gray-400">
-<tr>
+                      <tr>
                         <th scope="col" className="px-6 py-3">
                           Curso
                         </th>
@@ -446,10 +446,10 @@ const ResultsPage = () => {
           max-w-2xl. El Modal compartido es de formulario (fields/onSubmit)
           y no admite este contenido informativo. */}
       {detailOpen && detailStudent && detailQuiz && (
-<div
+        <div
           tabIndex="-1"
           onClick={closeDetail}
-          className="fixed left-0 right-0 top-0 z-50 flex h-full max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-85 backdrop-blur-sm p-4 md:inset-0"
+          className="fixed left-0 right-0 top-0 z-50 flex h-full max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden bg-gray-900 bg-opacity-85 p-4 backdrop-blur-sm md:inset-0"
         >
           <div
             onClick={(event) => event.stopPropagation()}
@@ -548,7 +548,9 @@ const ResultsPage = () => {
                               )}
                               {answer[`option_${optionNumber}_image_url`] && (
                                 <img
-                                  src={answer[`option_${optionNumber}_image_url`]}
+                                  src={
+                                    answer[`option_${optionNumber}_image_url`]
+                                  }
                                   alt={`Opción ${optionNumber}`}
                                   className="max-h-40 w-fit max-w-full rounded border border-gray-200 object-contain dark:border-gray-600"
                                 />
