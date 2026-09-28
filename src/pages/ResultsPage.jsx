@@ -245,28 +245,29 @@ const ResultsPage = () => {
     });
   };
 
-  // Nota promedio del estudiante (1-10): suma de correctas sobre suma de
-  // totales de los cuestionarios ASIGNADOS a su curso. Los pendientes (P)
-  // cuentan como 0 correctas pero suman su total, tal como califica un cierre.
+  // Nota promedio del estudiante (1-10): promedio SIMPLE de las notas de los
+  // cuestionarios ASIGNADOS a su curso. Cada quiz pesa igual, sin importar su
+  // número de preguntas; los pendientes (P) cuentan como 0.
   const getAverage = (student) => {
-    let correctSum = 0;
-    let totalSum = 0;
+    const grades = [];
     quizzes.forEach((quiz) => {
       if (!quiz.quiz_courses.includes(student.student_grade)) return;
       const result = student.results[quiz.quiz_id];
-      const correct =
-        result && typeof result.correct === "number" ? result.correct : 0;
-      const total =
-        result && typeof result.total === "number"
-          ? result.total
-          : quiz.quiz_question_count;
-      if (typeof total === "number" && total > 0) {
-        correctSum += correct;
-        totalSum += total;
+      if (
+        result &&
+        typeof result.correct === "number" &&
+        typeof result.total === "number" &&
+        result.total > 0
+      ) {
+        grades.push((result.correct / result.total) * 10);
+      } else {
+        grades.push(0);
       }
     });
-    if (totalSum === 0) return "—";
-    return notaFromRatio(correctSum / totalSum);
+    if (grades.length === 0) return "—";
+    const average =
+      grades.reduce((sum, grade) => sum + grade, 0) / grades.length;
+    return average.toFixed(1);
   };
 
   useEffect(() => {
